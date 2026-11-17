@@ -6,6 +6,16 @@
     "express": "^5.3.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.12.1",
+    "nodemon": "^3.1.14",
     "npm2": "^2.0.0"
+  },
+  "devDependencies": {
+    "browser-sync": "^3.0.4",
+    "connect-livereload": "^0.6.1",
+    "livereload": "^0.10.3"
+  },
+  "scripts": {
+    "dev": "nodemon app.js",
+    "dev:browser": "browser-sync start --proxy localhost:4000 --files \"app.js,views/**/*.ejs,public/**/*\" --no-open"
   }
 }

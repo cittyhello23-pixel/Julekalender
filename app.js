@@ -9,7 +9,7 @@ const app = express(); //idk
 require("dotenv").config(); //idk
 app.set("view engine", "ejs"); //idk
 app.use(express.urlencoded({ extended: true })); //idk
-app.use(express.static("public")); //idk
+app.use(express.static("public")); //gjør at express leter i public automatisk så du slipper å skrive public i banenavnet
 app.use(cookieParser()); //idk
 mongoose.connect(process.env.MONGODB_URI); //kobler mongoose og mongoDB database gjennom env for dynamisk endring
 
@@ -18,16 +18,16 @@ app.get("/", (req, res) => {
   res.render("index");
 });
 app.get("/login", (req, res) => {
-  res.render("Logg-inn");
+  res.render("login");
 });
 app.get("/luke", (req, res) => {
-  res.render("Luke");
+  res.render("luke");
 });
 app.get("/lukeEditor", (req, res) => {
-  res.render("Rediger-luke");
+  res.render("lukeEditor");
 });
 app.get("/lukeSvar", (req, res) => {
-  res.render("Svars-rapport");
+  res.render("lukeSvar");
 });
 
 //kobler det til en local host port, kan redigere hvilken port i .env sånn det er variabelt og lett å endre.

@@ -1,7 +1,31 @@
-<%- include ("./partials/head.ejs") %>
-<body>
-    <%- include ("./partials/nav.ejs") %>
+<html lang="en">
+  <%- include ("./partials/head.ejs") %>
 
-    
-</body>
+  <body>
+    <%- include ("./partials/nav.ejs") %>
+    <div class="header">
+      <h1>Logg inn!</h1>
+      <h2>
+        Skriv in ditt fornavn, etternavn, og skole E-post som vi kan kontakte
+        deg hvis du har vunnet en trekkning.
+      </h2>
+    </div>
+    <div class="main">
+      <form action="" method="post">
+        <label for="firstName">Fornavn</label>
+        <input type="text" name="firstName" id="firstName" />
+        <label for="lastName">Etternavn</label>
+        <input type="text" name="lastName" id="lastName" />
+        <label for="email">afk.no E-post</label>
+        <input type="email" name="email" id="email" />
+      </form>
+      <p>
+        Informasjonen du oppgir, brukes kun til å administrere brukerkontoen
+        din. Opplysningene dine blir ikke solgt eller delt med uvedkommende, og
+        behandles i samsvar med gjeldende personvernregler.
+      </p>
+    </div>
+
+    <%- include ("./partials/footer.ejs") %>
+  </body>
 </html>
