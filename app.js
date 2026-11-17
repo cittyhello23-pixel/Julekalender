@@ -3,6 +3,12 @@ const mongoose = require("mongoose"); // mongoose for å koble til mongodb
 const jwt = require("jsonwebtoken"); // for authentication av brukere sånn vi vet at de er de de sier de er
 const cookieParser = require("cookie-parser"); //for at cookier får bedre struktur
 
+const Luke = require("./models/Luke");
+const Sporsmal = require("./models/Sporsmal");
+const Svar = require("./models/Svar");
+const User = require("./models/User");
+const Vinner = require("./models/Vinner");
+
 const npm2 = require("npm2"); //idk
 const app = express(); //idk
 
