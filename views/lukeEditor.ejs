@@ -1,6 +1,46 @@
 <html lang="en">
-  <%- include ("./partials/head.ejs") %>
-  <body>
-    <%- include ("./partials/nav.ejs") %>
-  </body>
+<%- include ("./partials/head.ejs") %>
+
+<body>
+  <%- include ("./partials/nav.ejs") %>
+  <!-- den rare delen viser tallet fra linken du trykket på, så hvis det er luke 5, luke 5 er i url, det blir til et nummer objekt og det objektet vises i h1 hær -->
+  <h1>Rediger luke <%= luke.lukeNr %></h1>
+
+  <!-- //sier hvor infoen skal sendes. hvis det står /admin/luke/5, så skal infoen som blir postet redigere DEN luken -->
+  <form action="/admin/luke/<%= luke.lukeNr %>" method="post">
+    <label for="tittel">Tittel:</label>
+
+    <!-- text type for å lage et textfelt, id for styling mest, og navn for at express skal finne den når vi requester denne delen av body i app.js -->
+    <!-- value fyller det inni feltet fra før av med det som er lagred i tittel for den luken. det er default tomt i mongodb, så man kan ikke se noe hvis den ikke har blitt endret før. -->
+    <input type="text" name="tittel" id="tittel" value="<%= luke.tittel %>" />
+    <label for="innhold">Innhold:</label>
+
+    <!-- textarea er en større versjon av text type, bra hvis man skal skrive mer en noen ord. -->
+    <textarea name="innhold" id="innhold"><%= luke.innhold %></textarea>
+
+    <!-- for å paste en link, og lar admin velge om det er video, bilde, eller uten media. -->
+    <label for="media">Media lenke:</label>
+    <input type="text" name="media" id="media" value="<%= luke.media %>" />
+
+    <label for="mediaType">Media type:</label>
+    <select name="mediaType" id="mediaType">
+      <option value="ingen" <%= luke.mediaType === "ingen" ? "selected" : "" %>>
+        Ingen
+      </option>
+      <option value="bilde" <%= luke.mediaType === "bilde" ? "selected" : "" %>>
+        Bilde
+      </option>
+      <option value="video" <%= luke.mediaType === "video" ? "selected" : "" %>>
+        Video
+      </option>
+    </select>
+
+    <!-- Dette er en checkbox som du kan velge om du vil deaktivere luken når som helst. automatisk på, det er mer en backdoor hvis du har skrivet noe feil. brukes sjeldent. -->
+    <label for="aktiv">Aktiv:</label>
+    <input type="checkbox" name="aktiv" id="aktiv" value="true" <%= luke.aktiv ? "checked" : "" %> />
+
+    <button type="submit">Lagre endringer</button>
+  </form>
+</body>
+
 </html>

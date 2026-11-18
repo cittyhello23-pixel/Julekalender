@@ -12,10 +12,13 @@
   "devDependencies": {
     "browser-sync": "^3.0.4",
     "connect-livereload": "^0.6.1",
-    "livereload": "^0.10.3"
+    "livereload": "^0.10.3",
+    "prettier": "^3.10.1",
+    "prettier-plugin-ejs": "^1.0.3"
   },
   "scripts": {
     "dev": "nodemon app.js",
     "dev:browser": "browser-sync start --proxy localhost:4000 --files \"app.js,views/**/*.ejs,public/**/*\" --no-open"
   }
 }
+
