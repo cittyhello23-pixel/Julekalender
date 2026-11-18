@@ -26,14 +26,11 @@ const userSchema = mongoose.Schema({
     default: "elev",
     //man MÅ enten være admin eller elev
     required: true,
-
-
-
   },
 });
 
 //lager en user variabel, lager så en model men mongoose, "user" er navnet, og den sier den skal bruke strukturen til schemaen over.
-const user = mongoose.model("user", userSchema);
+const user = mongoose.model("User", userSchema);
 
 //module.exports gør at den er tilgjenglig for andre js filer
 //

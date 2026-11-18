@@ -1,22 +1,53 @@
-<html lang="en">
-<%- include ("./partials/head.ejs") %>
+<html lang="no">
+<%- include("./partials/head.ejs") %>
 
 <body>
-  <%- include ("./partials/nav.ejs") %>
+  <%- include("./partials/nav.ejs") %>
+
   <!-- den rare delen viser tallet fra linken du trykket på, så hvis det er luke 5, luke 5 er i url, det blir til et nummer objekt og det objektet vises i h1 hær -->
   <h1>Rediger luke <%= luke.lukeNr %></h1>
 
   <!-- //sier hvor infoen skal sendes. hvis det står /admin/luke/5, så skal infoen som blir postet redigere DEN luken -->
   <form action="/admin/luke/<%= luke.lukeNr %>" method="post">
+
     <label for="tittel">Tittel:</label>
 
     <!-- text type for å lage et textfelt, id for styling mest, og navn for at express skal finne den når vi requester denne delen av body i app.js -->
     <!-- value fyller det inni feltet fra før av med det som er lagred i tittel for den luken. det er default tomt i mongodb, så man kan ikke se noe hvis den ikke har blitt endret før. -->
     <input type="text" name="tittel" id="tittel" value="<%= luke.tittel %>" />
-    <label for="innhold">Innhold:</label>
+
+    <label for="sporsmal">Spørsmål:</label>
 
     <!-- textarea er en større versjon av text type, bra hvis man skal skrive mer en noen ord. -->
-    <textarea name="innhold" id="innhold"><%= luke.innhold %></textarea>
+    <!-- Hvis det finnes et manuelt spørsmål, vises det. Ellers vises spørsmålet fra seed-scriptet. -->
+    <textarea name="sporsmal" id="sporsmal"><%= luke.sporsmal || "" %></textarea>
+    <% if (quizSporsmal) { %>
+    <h3>Informasjon fra seed-scriptet</h3>
+
+    <p>Spørsmålstype: <%= quizSporsmal.type %></p>
+
+    <% if (quizSporsmal.type === "multiple_choice") { %>
+    <p>Svaralternativer:</p>
+    <ul>
+      <% quizSporsmal.options.forEach((option) => { %>
+      <li><%= option %></li>
+      <% }); %>
+    </ul>
+    <% } %>
+
+    <% if (quizSporsmal.type === "video") { %>
+    <p>
+      Video:
+      <a href="<%= quizSporsmal.video_url %>" target="_blank" rel="noopener noreferrer">
+        Åpne video
+      </a>
+    </p>
+    <% } %>
+
+    <p>Riktig svar: <%= quizSporsmal.correct_answer %></p>
+    <% } else { %>
+    <p>Det finnes ikke noe spørsmål for denne luken i seed-scriptet.</p>
+    <% } %>
 
     <!-- for å paste en link, og lar admin velge om det er video, bilde, eller uten media. -->
     <label for="media">Media lenke:</label>

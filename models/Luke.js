@@ -22,7 +22,7 @@ const lukeSchema = mongoose.Schema({
     default: "",
   },
   //selve spørsmalet
-  innhold: {
+  sporsmal: {
     type: String,
     default: "",
   },
@@ -39,6 +39,20 @@ const lukeSchema = mongoose.Schema({
     enum: ["bilde", "video", "ingen"],
     default: "ingen",
   },
+
+  svarType: {
+    type: String,
+    enum: ["tekst", "flervalg"],
+    default: "tekst",
+  },
+  alternativer: {
+    type: [String],
+    default: "", 
+  },
+  riktigSvar: {
+type: String,
+default: ""
+  }
 });
 
 const Luke = mongoose.model("Luke", lukeSchema);

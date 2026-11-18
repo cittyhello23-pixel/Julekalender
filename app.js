@@ -2,7 +2,10 @@ const express = require("express"); // express for liveserver
 const mongoose = require("mongoose"); // mongoose for å koble til mongodb
 const jwt = require("jsonwebtoken"); // for authentication av brukere sånn vi vet at de er de de sier de er
 const cookieParser = require("cookie-parser"); //for at cookier får bedre struktur
+const crypto = require("node:crypto"); //for tilgang til random uid for anonymous users
 
+
+const quizCollection = () => mongoose.connection.db.collection("quizzes");
 const Luke = require("./models/Luke");
 const Sporsmal = require("./models/Sporsmal");
 const Svar = require("./models/Svar");
@@ -32,29 +35,45 @@ app.get("/lukeDashboard", (req, res) => {
 app.get("/lukeSvar", (req, res) => {
   res.render("lukeSvar");
 });
+
+//dato sjekk
 app.get("/", async (req, res) => {
+  //object med ldato, lagres som en variabel som heter dato.
   const dato = new Date();
 
+  //gjør dagen til en dynamisk variabel man kan endre.
   const dag = Number(
+    //js verktøy som formaterer datoer og tider. gjør datoens dag til et tall istedenfor en string.
     new Intl.DateTimeFormat("en-US", {
       timeZone: "Europe/Oslo",
       day: "numeric",
     }).format(dato),
   );
+
+  //samme som det over, men med måned og ikke dag.
   const month = Number(
     new Intl.DateTimeFormat("en-US", {
       timeZone: "Europe/Oslo",
       month: "numeric",
     }).format(dato),
   );
-  const dagensDato = 24;
 
+  //denne bare sier at dagens dato er i dag. for meg akk nå er det den 18, så alle luker etter 18 er lukket.
+  const dagensDato = dag;
+
+  // denne er hvis jeg vil ha alle åpne, later som det er 24rd des
+  // const dagensDato = 24;
+
+  //denne sier hvis det ikke er des, skal du ikke åpne noen av de.
   // const dagensDato = month === 12 ? dag : 0;
 
   res.render("index", {
-    dagensDato: dagensDato,
+    dagensDato: dagensDato, //denne sender vagens dato til index ejs filen som at den vet hvilken dag det er for brukeren. den første er navnet som ejs får, mens den andre er selve variablen.
   });
 });
+
+
+
 //en get route for at luken man går in på fra dashboard skal fungere, og at den er valid. og noen små andre ting.
 app.get("/admin/luke/:lukeNr", async (req, res) => {
   //try er ganske straight forwards, PRØV dette. fordi vi bruker mongoDB og databaser kan ha info vi noen ganger ikke ville ha.
@@ -80,45 +99,102 @@ app.get("/admin/luke/:lukeNr", async (req, res) => {
         lukeNr: lukeNr,
         aktiv: true,
         tittel: "",
-        innhold: "",
+        sporsmal: "",
         media: "",
         mediaType: "ingen",
       };
     }
 
-    //rendererlukeEditor.ejs og sender objektet til ejs filen. den får navnet på variablen av lukeNr, og så infoen i den.
-    res.render("lukeEditor", { luke: luke });
+    // Henter spørsmålene fra seed-scriptet.
+    const quiz = await mongoose.connection.db
+      .collection("quizzes")
+      .findOne({ _id: "christmas-quiz" });
+
+    // Finner spørsmålet som hører til denne luken.
+    const quizSporsmal = quiz?.questions?.find(
+      (question) => question.id === lukeNr,
+    );
+
+    // Sender både luke og quiz-spørsmål til editoren.
+    res.render("lukeEditor", {
+      luke: luke,
+      quizSporsmal: quizSporsmal,
+    });
   } catch (error) {
     //hvis try/koden IKKE fungerer får man en error melding
     console.log(error);
     res.status(500).send("Noe gikk galt");
   }
-});
-
-//akk det samme som den over, bare denne gangen hvis en luke er deaktivert så vil den ikke rendere.
+}); //akk det samme som den over, bare denne gangen hvis en luke er deaktivert så vil den ikke rendere.
 app.get("/luke/:lukeNr", async (req, res) => {
   try {
     const lukeNr = Number(req.params.lukeNr);
 
-    if (isNaN(lukeNr) || lukeNr < 1 || lukeNr > 24) {
+    if (!Number.isInteger(lukeNr) || lukeNr < 1 || lukeNr > 24) {
       return res.status(400).send("Ugyldig luke");
     }
 
-    const luke = await Luke.findOne({ lukeNr: lukeNr });
+    // Henter informasjonen fra luke-kolleksjonen.
+    const funnetLuke = await Luke.findOne({ lukeNr: lukeNr });
 
-    // if (luke == null) {
-    //   return res.status(404).send("Denne luken finnes ikke");
-    // }
+    // Hvis luken ikke finnes i databasen, lager vi et midlertidig objekt.
+    // Dette gjør at seed-scriptet kan levere spørsmål uten at vi må ha en Luke fra før.
+    const luke = funnetLuke || {
+      lukeNr: lukeNr,
+      aktiv: true,
+      tittel: "",
+      sporsmal: "",
+      media: "",
+      mediaType: "ingen",
+    };
 
+    // Hvis luken er deaktivert, skal den ikke vises.
     if (!luke.aktiv) {
       return res.send("Denne luken er ikke tilgjengelig");
     }
-    res.render("luke", { luke: luke });
+
+    // Henter spørsmålene fra quiz-kolleksjonen som seed-scriptet lager.
+    const quiz = await mongoose.connection.db
+      .collection("quizzes")
+      .findOne({ _id: "christmas-quiz" });
+
+    // Finner spørsmålet som hører til denne luken.
+    const quizSporsmal = quiz?.questions?.find(
+      (question) => question.id === lukeNr,
+    );
+
+    // Sender både luke-informasjonen og quiz-spørsmålet til EJS.
+    res.render("luke", {
+      luke: luke,
+      quizSporsmal: quizSporsmal,
+    });
   } catch (error) {
     console.log(error);
     res.status(500).send("Noe gikk galt");
   }
 });
+
+app.post("/luke/:lukeNr/svar", async (req,res) => {
+  try { 
+    const lukeNr = Number(req.params.lukeNr)
+
+    if (!Number.isInteger(lukeNr) || lukeNr < 1 || lukeNr > 24) {
+      return res.status(400).send("Ugyldig luke")
+    }
+
+    const svar = req.body.svar;
+
+    if (!svar || !svar.trim()) {
+      return res.status(400).send("Du må skrive inn et svar")
+    }
+
+    
+    
+  } catch (error) {
+    
+  }
+})
+
 
 //post for å si at info kommer fra en post som skal bli sendt vidre
 //:lukeNr i url'en endrer basert på lukeNr, som endrer basert på hvilken luke du klikker
@@ -141,7 +217,7 @@ app.post("/admin/luke/:lukeNr", async (req, res) => {
         $set: {
           aktiv: req.body.aktiv === "true",
           tittel: req.body.tittel,
-          innhold: req.body.innhold,
+          sporsmal: req.body.sporsmal,
           media: req.body.media,
           mediaType: req.body.mediaType,
         },
@@ -163,6 +239,10 @@ app.post("/admin/luke/:lukeNr", async (req, res) => {
     res.status(500).send("Kunne ikke lagre luken.");
   }
 });
+
+// app.get("*", (req, res) => {
+//   res.send("I am a teapot");
+// });
 
 //kobler det til en local host port, kan redigere hvilken port i .env sånn det er variabelt og lett å endre.
 app.listen(process.env.PORT, () => {

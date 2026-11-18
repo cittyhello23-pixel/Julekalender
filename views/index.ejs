@@ -4,18 +4,30 @@
 <body>
   <%- include("./partials/nav") %>
   <div class="kalender">
+    <!-- for lager en repeating loop
+     let i = 1 sier at den skal starte på 1 istedenfro 0
+     i <= 24 sier at loopen skal vare mellom i(1) og mindre eller lik 24.
+     i++ for at i skal bli en større hver gang loopen går et steg vidre. -->
     <% for (let i = 1; i <= 24; i++) { %>
+
+    <!-- denne sjekker om nummeret på døren er FØR dagens dato. f eks hvis datoen er 18, da skal dører 1-17 ha klassen fortid -->
     <% if (i < dagensDato) { %>
+
+    <!-- dette lager en lenke for alle dagene som er i fortiden. siden hver luke har en i som er unik og i rekkefølge, sjekker den det, 
+         og så sender deg til den luken med å putte i inni lenken.  -->
     <a href="/luke/<%= i %>" class="luke fortid">
       <%= i %>
     </a>
+
+    <!-- sjekker om i på denne luken er samme tall som dagens dato og hvis den er får den den klassen -->
     <% } else if (i === dagensDato) {
     %>
     <a href="/luke/ <%= i %>" class="luke idag">
       <%= i %>
-    </a>
-    <% } else { %>
-    <div class="luke framtid">
+    </a> 
+
+    <% } else  { %> 
+    <div class="luke framtid"> 
       <%= i %>
     </div>
     <% } %>
