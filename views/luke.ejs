@@ -1,6 +1,25 @@
 <html lang="en">
-  <%- include ("./partials/head.ejs") %>
-  <body>
-    <%- include ("./partials/nav.ejs") %>
-  </body>
+<%- include ("./partials/head.ejs") %>
+
+<body>
+  <%- include ("./partials/nav.ejs") %>
+
+  <!-- det meste teksten på luke sidene er dynamisk, så blir puttet inn med js. den tar infoen fra databasen den er koblet til. spesifikt fra "luke" kolleksjonen.-->
+  <h1>Luke <%= luke.lukeNr %></h1>
+  <h2><%= luke.tittel %></h2>
+  <p><%= luke.innhold%></p>
+
+  <!-- en if statement, hvis mediatype er bilde skal den vise det bildet. hvis det er video, viser den videoen. så det er bare synlig hvis det er noe der. -->
+  <% if (luke.mediaType === "bilde" && luke.media) { %>
+  <img src="<%= luke.media %>" alt="Bilde til luke <%= luke.lukeNr %>">
+  <% } %>
+
+  <% if (luke.mediaType === "video" && luke.media) { %>
+  <video controls>
+    <source src="<%= luke.media %>">
+    Nettleseren din støtter ikke video.
+  </video>
+  <% } %>
+</body>
+
 </html>

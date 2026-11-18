@@ -14,30 +14,48 @@ const { log } = require("node:console");
 const app = express(); //idk
 
 require("dotenv").config(); //idk
-app.set("view engine", "ejs"); //idk
+app.set("view engine", "ejs"); //sier til express hvilken template engine den skal bruke.
 app.use(express.urlencoded({ extended: true })); //lar express lese info fra en html form
 app.use(express.static("public")); //gjør at express leter i public automatisk så du slipper å skrive public i banenavnet
 app.use(cookieParser()); //idk
 mongoose.connect(process.env.MONGODB_URI); //kobler mongoose og mongoDB database gjennom env for dynamisk endring
 
 //basic rendering, app.get for at brukere sånn åpner nettsider faktiskt får opp infoen i ejs.
-app.get("/", (req, res) => {
-  res.render("index");
-});
+
 app.get("/login", (req, res) => {
   res.render("login");
 });
-app.get("/luke", (req, res) => {
-  res.render("luke");
-});
+
 app.get("/lukeDashboard", (req, res) => {
   res.render("lukeDashboard");
 });
 app.get("/lukeSvar", (req, res) => {
   res.render("lukeSvar");
 });
+app.get("/", async (req, res) => {
+  const dato = new Date();
 
-//en get route,
+  const dag = Number(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: "Europe/Oslo",
+      day: "numeric",
+    }).format(dato),
+  );
+  const month = Number(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: "Europe/Oslo",
+      month: "numeric",
+    }).format(dato),
+  );
+  const dagensDato = 24;
+
+  // const dagensDato = month === 12 ? dag : 0;
+
+  res.render("index", {
+    dagensDato: dagensDato,
+  });
+});
+//en get route for at luken man går in på fra dashboard skal fungere, og at den er valid. og noen små andre ting.
 app.get("/admin/luke/:lukeNr", async (req, res) => {
   //try er ganske straight forwards, PRØV dette. fordi vi bruker mongoDB og databaser kan ha info vi noen ganger ikke ville ha.
   try {
@@ -72,6 +90,31 @@ app.get("/admin/luke/:lukeNr", async (req, res) => {
     res.render("lukeEditor", { luke: luke });
   } catch (error) {
     //hvis try/koden IKKE fungerer får man en error melding
+    console.log(error);
+    res.status(500).send("Noe gikk galt");
+  }
+});
+
+//akk det samme som den over, bare denne gangen hvis en luke er deaktivert så vil den ikke rendere.
+app.get("/luke/:lukeNr", async (req, res) => {
+  try {
+    const lukeNr = Number(req.params.lukeNr);
+
+    if (isNaN(lukeNr) || lukeNr < 1 || lukeNr > 24) {
+      return res.status(400).send("Ugyldig luke");
+    }
+
+    const luke = await Luke.findOne({ lukeNr: lukeNr });
+
+    // if (luke == null) {
+    //   return res.status(404).send("Denne luken finnes ikke");
+    // }
+
+    if (!luke.aktiv) {
+      return res.send("Denne luken er ikke tilgjengelig");
+    }
+    res.render("luke", { luke: luke });
+  } catch (error) {
     console.log(error);
     res.status(500).send("Noe gikk galt");
   }

@@ -4,7 +4,16 @@ const mongoose = require("mongoose"); // mongoose for å koble til mongodb
 //en schema forklarer databasen hvordan informasjon gitt til den skal være strukturert.
 const userSchema = mongoose.Schema({
   //strukturen databasen skal bruke. f eks "email" er navnet på det feltet, mens string er data typen.
-  email: String,
+  email: {
+    type: String,
+    // "." er hva som helst karakter, "+" er en eller fler karakterer, afk delen får at adressen MÅ ha "@afk.no" og "$" betyr at det må ende etter .no
+    match: /.+@afk\.no$/,
+    //mellomromm og sån før eller etter teksten blir fjernet på start og slutt.
+    trim: true,
+
+    //det må være lowercase for at match skal fungere
+    lowercase: true,
+  },
   navn: {
     type: String,
     required: true,
@@ -18,14 +27,8 @@ const userSchema = mongoose.Schema({
     //man MÅ enten være admin eller elev
     required: true,
 
-    // "." er hva som helst karakter, "+" er en eller fler karakterer, afk delen får at adressen MÅ ha "@afk.no" og "$" betyr at det må ende etter .no
-    match: /.+@afk\.no$/,
 
-    //mellomromm og sån før eller etter teksten blir fjernet på start og slutt.
-    trim: true,
 
-    //det må være lowercase for at match skal fungere
-    lowercase: true,
   },
 });
 
