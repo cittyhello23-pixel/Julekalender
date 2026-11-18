@@ -30,8 +30,8 @@ app.get("/login", (req, res) => {
 app.get("/luke", (req, res) => {
   res.render("luke");
 });
-app.get("/lukeEditor", (req, res) => {
-  res.render("lukeEditor");
+app.get("/lukeDashboard", (req, res) => {
+  res.render("lukeDashboard");
 });
 app.get("/lukeSvar", (req, res) => {
   res.render("lukeSvar");
