@@ -4,7 +4,6 @@ const jwt = require("jsonwebtoken"); // for authentication av brukere sånn vi v
 const cookieParser = require("cookie-parser"); //for at cookier får bedre struktur
 const crypto = require("node:crypto"); //for tilgang til random uid for anonymous users
 
-
 const quizCollection = () => mongoose.connection.db.collection("quizzes");
 const Luke = require("./models/Luke");
 const Sporsmal = require("./models/Sporsmal");
@@ -23,16 +22,105 @@ app.use(express.static("public")); //gjør at express leter i public automatisk 
 app.use(cookieParser()); //idk
 mongoose.connect(process.env.MONGODB_URI); //kobler mongoose og mongoDB database gjennom env for dynamisk endring
 
-//basic rendering, app.get for at brukere sånn åpner nettsider faktiskt får opp infoen i ejs.
+//lager en ny function
+const requireLogin = async (req, res, next) => {
+  try {
+    //tar login token fra cookies
+    const token = req.cookies.token;
 
+    //sjekker om det eksisterer en token, sender en response til nettleser at du ikke er logget in.
+    if (!token) {
+      return res.status(401).json({ loginRequired: true });
+    }
+
+    //sjekker om token er valid med nøkkel fra env
+    const decoded = jwt.verify(token, process.env.SECRET_JWT);
+
+    //tar ut uid fra token
+    const user = await User.findById(decoded.userId);
+
+    // sjekker om uid faktisk er i db, de kan ha en uid selvom de ikke er der hvis de har blitt slettet.
+    if (!user) {
+      return res.status(401).json({ loginRequired: true });
+    }
+
+    //lagrer brukerens info og lar det bli dratt ut når man requester det
+    req.user = user;
+
+    //dette sier til express at de kan fortsette
+    next();
+  } catch (error) {
+    return res.status(401).json({ loginRequired: true });
+  }
+};
+
+//basic rendering, app.get for at brukere sånn åpner nettsider faktisk får opp infoen i ejs.
 app.get("/login", (req, res) => {
   res.render("login");
 });
 
-app.get("/lukeDashboard", (req, res) => {
+app.post("/login", async (req, res) => {
+  try {
+    //tar infoen skrevet i body og gjør det til objekt
+    const firstName = req.body.firstName.trim();
+    const lastName = req.body.lastName.trim();
+    const email = req.body.email.trim().toLowerCase();
+
+    //setter sammen fornavn og etternavn til ET navn
+    const navn = `${firstName} ${lastName}`;
+
+    //gir error hvis man ikke fyller et felt
+    if (!firstName || !lastName || !email.endsWith("@afk.no")) {
+      return res.status(400).send("Du må bruke en afk E-post.");
+    }
+
+    //find and update, sjekker om det er en brukermed samme email i db, hvis ikke så lager den en
+    const user = await User.findOneAndUpdate(
+      //leter etter email
+      { email: email },
+      {
+        //sånn man kan endre navn på pålogging
+        $set: {
+          navn: navn,
+        },
+
+        //gir deg en rolle hvis det er en ny bruker, trenger ikke endres.
+        $setOnInsert: {
+          role: "elev",
+        },
+      },
+      {
+        //gir tilbake den nye oppdaterte brukeren i db, eller lager en ny en, og så sjekker at all infoen gikk passer med schemaets regler.
+        new: true,
+        upsert: true,
+        runValidators: true,
+      },
+    );
+
+    //lager en token, med brukerens db uid, secret key, og en expiery dato
+    const token = jwt.sign({ userId: user._id }, process.env.SECRET_JWT, {
+      expiresIn: "30d",
+    });
+
+    //lagre token i en cookie. gir den navn, selve tokenen, og ekstra ting som er litt over mitt skill level
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+
+    res.redirect("/");
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Kunne ikke logge inn.");
+  }
+});
+
+app.get("/lukeDashboard", requireLogin, (req, res) => {
   res.render("lukeDashboard");
 });
-app.get("/lukeSvar", (req, res) => {
+app.get("/lukeSvar", requireLogin, (req, res) => {
   res.render("lukeSvar");
 });
 
@@ -71,8 +159,6 @@ app.get("/", async (req, res) => {
     dagensDato: dagensDato, //denne sender vagens dato til index ejs filen som at den vet hvilken dag det er for brukeren. den første er navnet som ejs får, mens den andre er selve variablen.
   });
 });
-
-
 
 //en get route for at luken man går in på fra dashboard skal fungere, og at den er valid. og noen små andre ting.
 app.get("/admin/luke/:lukeNr", async (req, res) => {
@@ -174,27 +260,30 @@ app.get("/luke/:lukeNr", async (req, res) => {
   }
 });
 
-app.post("/luke/:lukeNr/svar", async (req,res) => {
-  try { 
-    const lukeNr = Number(req.params.lukeNr)
+app.post("/luke/:lukeNr/svar", requireLogin, async (req, res) => {
+  try {
+    const lukeNr = Number(req.params.lukeNr);
 
     if (!Number.isInteger(lukeNr) || lukeNr < 1 || lukeNr > 24) {
-      return res.status(400).send("Ugyldig luke")
+      return res.status(400).send("Ugyldig luke");
     }
 
     const svar = req.body.svar;
 
     if (!svar || !svar.trim()) {
-      return res.status(400).send("Du må skrive inn et svar")
+      return res.status(400).send("Du må skrive inn et svar");
     }
+    await Svar.create({
+      lukeNr: lukeNr,
+      userId: req.user._id,
+      svar: svar.trim(),
+    });
 
-    
-    
-  } catch (error) {
-    
-  }
-})
-
+    res.redirect(`/luke/${lukeNr}`);
+  } catch (error) {}
+  console.log(error);
+  res.status(500).send("Kunne ikke lagre svaret.");
+});
 
 //post for å si at info kommer fra en post som skal bli sendt vidre
 //:lukeNr i url'en endrer basert på lukeNr, som endrer basert på hvilken luke du klikker
