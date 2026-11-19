@@ -161,15 +161,41 @@ app.get("/lukeDashboard", requireLogin, requireAdmin, (req, res) => {
 //sjekker at bruker er admin, tar alle svar gra mongodb, nyeste først, og sender til ejs
 app.get("/lukeSvar", requireLogin, requireAdmin, async (req, res) => {
   try {
-    const svar = await Svar.find().sort({ createdAt: -1 });
+    const filter = {};
+    if (req.query.lukeNr) {
+      filter.lukeNr = Number(req.query.lukeNr);
+    }
+    const svar = await Svar.find(filter).sort({ createdAt: -1 });
+    const riktigSvar = svar.filter((s) => s.riktig === true)
+    const feilSvar = svar((s) => s.riktig === false)
+    const ikkeVurdert = svar.filter((s) => s.riktig === null)
+
     const luker = await Luke.find();
 
-    const quiz = await quizCollection.findOne({
+    const quiz = await quizCollection().findOne({
       _id: "christmas-quiz",
     });
 
-    res.render("lukeSvar", { svar: svar });
-    svar: svar;
+    const svarMedRiktigSvar = svar.map((s) => {
+      //finner luken som eleven svarte på
+      const luke = luker.find((l) => l.lukeNr === s.lukeNr);
+
+      //spørsmålet med samme luke nrs
+      const quizSporsmal = quiz?.questions?.find((q) => q.id === s.lukeNr);
+
+      //henter det riktige svare fra enten luke kolleksjon eller quiz.
+      const riktigSvar =
+        luke?.riktigSvar?.trim() ||
+        quizSporsmal?.correct_answer?.trim() ||
+        "ikke gitt";
+
+      return {
+        ...s.toObject(),
+        riktigSvar: riktigSvar,
+      };
+    });
+
+    res.render("lukeSvar", { svar: svarMedRiktigSvar });
   } catch (error) {
     res.status(500).send("Kunne ikke hente svar.");
   }
