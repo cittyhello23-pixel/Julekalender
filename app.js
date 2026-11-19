@@ -273,6 +273,8 @@ app.get("/lukeSvar", requireLogin, requireAdmin, async (req, res) => {
 //
 //
 //
+//
+//
 // lar admin markere et svar som riktig eller feil, og filtrere svar
 //
 app.post(
@@ -316,6 +318,11 @@ app.post(
   },
 );
 
+//
+//
+//
+//
+//
 // hovedside
 
 // viser julekalenderen og finner dagens dato
