@@ -22,7 +22,7 @@ app.use(express.static("public")); //gjør at express leter i public automatisk 
 app.use(cookieParser()); //idk
 mongoose.connect(process.env.MONGODB_URI); //kobler mongoose og mongoDB database gjennom env for dynamisk endring
 
-//lager en ny function
+//lager en ny function, denne kan blokke brukere som IKKE er logget inn
 const requireLogin = async (req, res, next) => {
   try {
     //tar login token fra cookies
@@ -52,6 +52,43 @@ const requireLogin = async (req, res, next) => {
   } catch (error) {
     return res.status(401).json({ loginRequired: true });
   }
+};
+
+//denne funksjonen er for å sjekke om noen er logget in uten å blokkere dem.
+const optionalLogin = async (req, res, next) => {
+  try {
+    //henter token fra cookies
+    const token = req.cookies.token;
+
+    //sier at det ikke er en bruker hvis det ikke er en token
+    if (!token) {
+      req.user = null;
+      return next();
+    }
+
+    //sjekker om token er gyldig
+    const decoded = jwt.verify(token, process.env.SECRET_JWT);
+
+    //henter uid fra mongodb
+    const user = await User.findById(decoded.userId);
+
+    //lager et user objekt hvis den finner ellers null
+    req.user = user || null;
+
+    next();
+  } catch (error) {
+    //hvsi token er ugyldig så sier den at brukeren ikke er logget inn
+    req.user = null;
+    next();
+  }
+};
+
+//sjekker om de er admin
+const requireAdmin = (req, res, next) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).send("Du har ikke tilgang til denne siden.");
+  }
+  next();
 };
 
 //basic rendering, app.get for at brukere sånn åpner nettsider faktisk får opp infoen i ejs.
@@ -161,7 +198,7 @@ app.get("/", async (req, res) => {
 });
 
 //en get route for at luken man går in på fra dashboard skal fungere, og at den er valid. og noen små andre ting.
-app.get("/admin/luke/:lukeNr", async (req, res) => {
+app.get("/admin/luke/:lukeNr", requireLogin, requireAdmin, async (req, res) => {
   //try er ganske straight forwards, PRØV dette. fordi vi bruker mongoDB og databaser kan ha info vi noen ganger ikke ville ha.
   try {
     //tar lukeNr fra URL. parseInt gjør det til et nummer istedenfor string som er i url.
@@ -212,7 +249,7 @@ app.get("/admin/luke/:lukeNr", async (req, res) => {
     res.status(500).send("Noe gikk galt");
   }
 }); //akk det samme som den over, bare denne gangen hvis en luke er deaktivert så vil den ikke rendere.
-app.get("/luke/:lukeNr", async (req, res) => {
+app.get("/luke/:lukeNr", optionalLogin, async (req, res) => {
   try {
     const lukeNr = Number(req.params.lukeNr);
 
@@ -251,8 +288,14 @@ app.get("/luke/:lukeNr", async (req, res) => {
 
     // Sender både luke-informasjonen og quiz-spørsmålet til EJS.
     res.render("luke", {
+//sjekker om brukeren nettop sendte et svar
+      submitted: req.query.submitted === "true",
+
       luke: luke,
       quizSporsmal: quizSporsmal,
+
+      //gjør logget in eller ei til en boolean, så ikke logget in = true hvis du ikke er logget in
+      loggedIn: !!req.user,
     });
   } catch (error) {
     console.log(error);
@@ -260,7 +303,7 @@ app.get("/luke/:lukeNr", async (req, res) => {
   }
 });
 
-app.post("/luke/:lukeNr/svar", requireLogin, async (req, res) => {
+app.post("/luke/:lukeNr/svar", requireLogin, requireAdmin, async (req, res) => {
   try {
     const lukeNr = Number(req.params.lukeNr);
 
@@ -273,61 +316,74 @@ app.post("/luke/:lukeNr/svar", requireLogin, async (req, res) => {
     if (!svar || !svar.trim()) {
       return res.status(400).send("Du må skrive inn et svar");
     }
+
+    const luke = await Luke.findOne({ lukeNr: lukeNr });
+
+    if (luke && !luke.aktiv) {
+      return res.status(404).send("Denne luken finnes ikke");
+    }
+
     await Svar.create({
       lukeNr: lukeNr,
       userId: req.user._id,
       svar: svar.trim(),
     });
 
-    res.redirect(`/luke/${lukeNr}`);
-  } catch (error) {}
-  console.log(error);
-  res.status(500).send("Kunne ikke lagre svaret.");
+    res.redirect(`/luke/${lukeNr}?submitter=true`);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Kunne ikke lagre svaret.");
+  }
 });
 
 //post for å si at info kommer fra en post som skal bli sendt vidre
 //:lukeNr i url'en endrer basert på lukeNr, som endrer basert på hvilken luke du klikker
 //async for å bruke await
-app.post("/admin/luke/:lukeNr", async (req, res) => {
-  try {
-    //gjør lukeNr til et nummer
-    const lukeNr = Number(req.params.lukeNr);
+app.post(
+  "/admin/luke/:lukeNr",
+  requireLogin,
+  requireAdmin,
+  async (req, res) => {
+    try {
+      //gjør lukeNr til et nummer
+      const lukeNr = Number(req.params.lukeNr);
 
-    //sjekker at luke nummeret er valid
-    if (!Number.isInteger(lukeNr) || lukeNr < 1 || lukeNr > 24) {
-      return res.status(400).send("Ugyldig luke");
-    }
+      //sjekker at luke nummeret er valid
+      if (!Number.isInteger(lukeNr) || lukeNr < 1 || lukeNr > 24) {
+        return res.status(400).send("Ugyldig luke");
+      }
 
-    //spør mongoose om å finne infoen fra luke hvor lukenr er det samme som luken som er åpen for redigering i browser
-    await Luke.findOneAndUpdate(
-      { lukeNr: lukeNr },
-      {
-        //sier til mongoose hva den skal oppdatere eller lagre basert på det som blir postet, req.body / request det som er i dette feltet i body.
-        $set: {
-          aktiv: req.body.aktiv === "true",
-          tittel: req.body.tittel,
-          sporsmal: req.body.sporsmal,
-          media: req.body.media,
-          mediaType: req.body.mediaType,
+      //spør mongoose om å finne infoen fra luke hvor lukenr er det samme som luken som er åpen for redigering i browser
+      await Luke.findOneAndUpdate(
+        { lukeNr: lukeNr },
+        {
+          //sier til mongoose hva den skal oppdatere eller lagre basert på det som blir postet, req.body / request det som er i dette feltet i body.
+          $set: {
+            aktiv: req.body.aktiv === "true",
+            tittel: req.body.tittel,
+            sporsmal: req.body.sporsmal,
+            media: req.body.media,
+            mediaType: req.body.mediaType,
+          },
         },
-      },
 
-      {
-        //upsert er sånn "oppdater hvis det eksisterer, og hvis det ikke eksisterer infoen som blir lagret så lager du det fra nytt med det som blir postet."
-        upsert: true,
-        //passer på at hvis du oppdaterer, at det føllger alle reglene i schemaen.
-        runValidators: true,
-        //passer på at schemaen sine defaults faktisk settes på når man upserter
-        setDefaultOnInsert: true,
-      },
-    );
-    //etter man lagrer går du tilbake til editor for samme dør
-    res.redirect(`/admin/luke/${lukeNr}`);
-  } catch (error) {
-    console.log(error);
-    res.status(500).send("Kunne ikke lagre luken.");
-  }
-});
+        {
+          //upsert er sånn "oppdater hvis det eksisterer, og hvis det ikke eksisterer infoen som blir lagret så lager du det fra nytt med det som blir postet."
+          upsert: true,
+          //passer på at hvis du oppdaterer, at det føllger alle reglene i schemaen.
+          runValidators: true,
+          //passer på at schemaen sine defaults faktisk settes på når man upserter
+          setDefaultOnInsert: true,
+        },
+      );
+      //etter man lagrer går du tilbake til editor for samme dør
+      res.redirect(`/admin/luke/${lukeNr}`);
+    } catch (error) {
+      console.log(error);
+      res.status(500).send("Kunne ikke lagre luken.");
+    }
+  },
+);
 
 // app.get("*", (req, res) => {
 //   res.send("I am a teapot");

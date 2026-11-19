@@ -1,6 +1,8 @@
 <html lang="no">
 <%- include("./partials/head.ejs") %>
 
+<!-- for at html skal eksistere FØR scriptet leter etter elementene og bestemmer at de ikke eksisterer -->
+
 <body>
   <%- include("./partials/nav.ejs") %>
 
@@ -48,6 +50,70 @@
   </video>
   <% } %>
 
+
+<% if (submitted) { %> 
+<div>
+    <h2>
+        Svaret ditt er sendt inn! Tusen takk!
+    </h2>
+</div>
+<% } %>
+  <% if (loggedIn && sporsmalstekst) { %>
+  <form action="/luke/<%= luke.lukeNr %>/svar" method="post">
+    <% if (quizSporsmal?.type === "multiple_choice") { %>
+    <h3>Velg svaret ditt:</h3>
+
+    <!-- for each loop for at hvert alternativ skal få en id. går gjennom alt i seed-->
+    <% quizSporsmal.options.forEach((option, index) => { %>
+
+
+    <!-- lager et label for alle av de -->
+    <label for="alternativ<%= index %>">
+      <%= option %>
+    </label>
+
+
+    <!-- radio knapp som lar eleven velge svar -->
+    <input type="radio" name="svar" id="alternativ<%= index %>" value="<%= option %>" required>
+
+    <% }); %>
+
+    <!-- //hvis det ikke er et alternativt svar, er det åpent. -->
+    <% } else { %>
+
+    <label for="svar">Skriv svaret ditt:</label>
+    <textarea name="svar" id="svar" placeholder="Skriv ditt svar her..." required></textarea>
+    <% } %>
+    <button type="submit">Send inn svaret ♡</button>
+  </form>
+  <% } %>
+
+  <!-- //script for en popup hvis man går in på en luke uten å være logget inn. siden det er !loggedIn, vises den bare hvis man ikke er logget inn. -->
+  <% if (!loggedIn) { %>
+
+  <div class="loginPopup" id="loginPopup">
+    <div class="loginPopupInnhold">
+      <button type="button" class="closePopup" onclick="closePopup()">
+        ×
+      </button>
+      <h2>
+        Å nei!
+      </h2>
+      <h3>
+        Du er ikke logget inn!
+      </h3>
+      <p>
+        For å delta i julekalenderen og sende inn svar, må du logge inn med din skole E-post.
+      </p>
+      <a href="
+       /login " class="popupButton">Logg inn her ♡</a>
+      <button type="button" class="senere" onclick="closePopup()">Kanskje senere</button>
+    </div>
+  </div>
+
+  <script src="/js/popup.js"></script>
+
 </body>
+<% } %>
 
 </html>

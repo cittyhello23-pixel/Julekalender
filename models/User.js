@@ -26,6 +26,9 @@ const userSchema = mongoose.Schema({
     default: "elev",
     //man MÅ enten være admin eller elev
     required: true,
+
+
+
   },
 });
 
