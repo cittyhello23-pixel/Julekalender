@@ -22,12 +22,12 @@
     <!-- sjekker om i på denne luken er samme tall som dagens dato og hvis den er får den den klassen -->
     <% } else if (i === dagensDato) {
     %>
-    <a href="/luke/ <%= i %>" class="luke idag">
+    <a href="/luke/ <%= i%>" class="luke idag">
       <%= i %>
-    </a> 
+    </a>
 
-    <% } else  { %> 
-    <div class="luke framtid"> 
+    <% } else  { %>
+    <div class="luke framtid">
       <%= i %>
     </div>
     <% } %>

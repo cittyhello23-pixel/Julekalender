@@ -11,9 +11,8 @@
   <h2><%= luke.tittel %></h2>
 
   <% 
-    // Hvis læreren har skrevet inn et eget spørsmål i editoren,
-    // bruker vi det. Ellers bruker vi spørsmålet fra seed-scriptet.
-    const sporsmalstekst = luke.sporsmal || quizSporsmal?.question;
+//henter spørsmålet fra luke i db
+    const sporsmalstekst = luke.sporsmal
   %>
 
   <% if (sporsmalstekst) { %>
@@ -21,21 +20,12 @@
   <% } %>
 
   <!-- Viser svaralternativer hvis spørsmålet er multiple choice. -->
-  <% if (quizSporsmal?.type === "multiple_choice") { %>
+  <% if (luke.svarType === "multiple_choice") { %>
   <ul>
-    <% quizSporsmal.options.forEach((option) => { %>
+    <% (luke.alternativer || []).forEach((option) => { %>
     <li><%= option %></li>
     <% }); %>
   </ul>
-  <% } %>
-
-  <!-- Viser videolenken fra seed-scriptet. -->
-  <% if (quizSporsmal?.type === "video" && quizSporsmal.video_url) { %>
-  <p>
-    <a href="<%= quizSporsmal.video_url %>" target="_blank" rel="noopener noreferrer">
-      Se videoen
-    </a>
-  </p>
   <% } %>
 
   <!-- en if statement, hvis mediatype er bilde skal den vise det bildet. hvis det er video, viser den videoen. så det er bare synlig hvis det er noe der. -->
@@ -69,11 +59,11 @@
   <% } %>
   <% if (loggedIn && sporsmalstekst) { %>
   <form action="/luke/<%= luke.lukeNr %>/svar" method="post">
-    <% if (quizSporsmal?.type === "multiple_choice") { %>
+    <% if (luke.svarType === "multiple_choice") { %>
     <h3>Velg svaret ditt:</h3>
 
     <!-- for each loop for at hvert alternativ skal få en id. går gjennom alt i seed-->
-    <% quizSporsmal.options.forEach((option, index) => { %>
+    <% (luke.alternativer || []).forEach((option, index) => { %>
 
 
     <!-- lager et label for alle av de -->

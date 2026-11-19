@@ -27,6 +27,19 @@ const lukeSchema = mongoose.Schema({
     default: "",
   },
 
+  svarType: {
+    type: String,
+    enum: ["open", "multiple_choice", "video"],
+    default: "open",
+  },
+  alternativer: {
+    type: [String],
+    default: [],
+  },
+  riktigSvar: {
+    type: String,
+    default: "",
+  },
   //link til video eller bilde
   media: {
     type: String,
@@ -40,19 +53,6 @@ const lukeSchema = mongoose.Schema({
     default: "ingen",
   },
 
-  svarType: {
-    type: String,
-    enum: ["tekst", "flervalg"],
-    default: "tekst",
-  },
-  alternativer: {
-    type: [String],
-    default: "", 
-  },
-  riktigSvar: {
-type: String,
-default: ""
-  }
 });
 
 const Luke = mongoose.model("Luke", lukeSchema);

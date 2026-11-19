@@ -175,22 +175,11 @@ app.get("/", async (req, res) => {
     }).format(dato),
   );
 
-  //samme som det over, men med måned og ikke dag.
-  const month = Number(
-    new Intl.DateTimeFormat("en-US", {
-      timeZone: "Europe/Oslo",
-      month: "numeric",
-    }).format(dato),
-  );
-
   //denne bare sier at dagens dato er i dag. for meg akk nå er det den 18, så alle luker etter 18 er lukket.
   const dagensDato = dag;
 
   // denne er hvis jeg vil ha alle åpne, later som det er 24rd des
   // const dagensDato = 24;
-
-  //denne sier hvis det ikke er des, skal du ikke åpne noen av de.
-  // const dagensDato = month === 12 ? dag : 0;
 
   res.render("index", {
     dagensDato: dagensDato, //denne sender vagens dato til index ejs filen som at den vet hvilken dag det er for brukeren. den første er navnet som ejs får, mens den andre er selve variablen.
@@ -223,15 +212,18 @@ app.get("/admin/luke/:lukeNr", requireLogin, requireAdmin, async (req, res) => {
         aktiv: true,
         tittel: "",
         sporsmal: "",
+        svarType: "open",
+        alternativer: [],
+        riktigSvar: "",
         media: "",
         mediaType: "ingen",
       };
     }
 
-    // Henter spørsmålene fra seed-scriptet.
-    const quiz = await mongoose.connection.db
-      .collection("quizzes")
-      .findOne({ _id: "christmas-quiz" });
+    // Henter quiz-spørsmålene fra quizzes-kolleksjonen.
+    const quiz = await quizCollection().findOne({
+      _id: "christmas-quiz",
+    });
 
     // Finner spørsmålet som hører til denne luken.
     const quizSporsmal = quiz?.questions?.find(
@@ -260,15 +252,28 @@ app.get("/luke/:lukeNr", optionalLogin, async (req, res) => {
     // Henter informasjonen fra luke-kolleksjonen.
     const funnetLuke = await Luke.findOne({ lukeNr: lukeNr });
 
+    const quiz = await quizCollection().findOne({
+      _id: "christmas-quiz",
+    });
+
+    const quizSporsmal = quiz?.questions?.find(
+      (question) => question.id === lukeNr,
+    );
+
     // Hvis luken ikke finnes i databasen, lager vi et midlertidig objekt.
     // Dette gjør at seed-scriptet kan levere spørsmål uten at vi må ha en Luke fra før.
-    const luke = funnetLuke || {
+    const luke = {
       lukeNr: lukeNr,
-      aktiv: true,
-      tittel: "",
-      sporsmal: "",
-      media: "",
-      mediaType: "ingen",
+      aktiv: funnetLuke?.aktiv ?? true,
+      tittel: funnetLuke?.tittel || "",
+      sporsmal: funnetLuke?.sporsmal || quizSporsmal?.question || "",
+      svarType: funnetLuke?.svarType || "open",
+      alternativer: funnetLuke?.alternativer?.length
+        ? funnetLuke.alternativer
+        : quizSporsmal?.options || [],
+      riktigSvar: funnetLuke?.riktigSvar || quizSporsmal?.correct_answer || "",
+      media: funnetLuke?.media || quizSporsmal?.video_url || "",
+      mediaType: funnetLuke?.mediaType || "ingen",
     };
 
     // Hvis luken er deaktivert, skal den ikke vises.
@@ -276,24 +281,13 @@ app.get("/luke/:lukeNr", optionalLogin, async (req, res) => {
       return res.send("Denne luken er ikke tilgjengelig");
     }
 
-    // Henter spørsmålene fra quiz-kolleksjonen som seed-scriptet lager.
-    const quiz = await mongoose.connection.db
-      .collection("quizzes")
-      .findOne({ _id: "christmas-quiz" });
-
-    // Finner spørsmålet som hører til denne luken.
-    const quizSporsmal = quiz?.questions?.find(
-      (question) => question.id === lukeNr,
-    );
-
     // Sender både luke-informasjonen og quiz-spørsmålet til EJS.
     res.render("luke", {
+      quizSporsmal: quizSporsmal,
       //sjekker om brukeren nettop sendte et svar
       submitted: req.query.submitted === "true",
       eksisterendeSvar: req.query.eksisterendeSvar === "true",
       luke: luke,
-      quizSporsmal: quizSporsmal,
-
       //gjør logget in eller ei til en boolean, så ikke logget in = true hvis du ikke er logget in
       loggedIn: !!req.user,
     });
@@ -363,7 +357,15 @@ app.post(
       if (!Number.isInteger(lukeNr) || lukeNr < 1 || lukeNr > 24) {
         return res.status(400).send("Ugyldig luke");
       }
+      const eksisterendeLuke = await Luke.findOne({ lukeNr: lukeNr });
 
+      const quiz = await quizCollection().findOne({
+        _id: "christmas-quiz",
+      });
+
+      const quizSporsmal = quiz?.questions?.find(
+        (question) => question.id === lukeNr,
+      );
       //spør mongoose om å finne infoen fra luke hvor lukenr er det samme som luken som er åpen for redigering i browser
       await Luke.findOneAndUpdate(
         { lukeNr: lukeNr },
@@ -371,10 +373,34 @@ app.post(
           //sier til mongoose hva den skal oppdatere eller lagre basert på det som blir postet, req.body / request det som er i dette feltet i body.
           $set: {
             aktiv: req.body.aktiv === "true",
-            tittel: req.body.tittel,
-            sporsmal: req.body.sporsmal,
-            media: req.body.media,
-            mediaType: req.body.mediaType,
+            tittel: req.body.tittel || eksisterendeLuke?.tittel || "",
+            sporsmal:
+              req.body.sporsmal ||
+              eksisterendeLuke?.sporsmal ||
+              quizSporsmal?.question ||
+              "",
+            svarType: req.body.svarType || eksisterendeLuke?.svarType || "open",
+            alternativer: req.body.alternativer
+              ? req.body.alternativer
+                  .split(/\r?\n/)
+                  .map((option) => option.trim())
+                  .filter((option) => option.length > 0)
+              : eksisterendeLuke?.alternativer?.length
+                ? eksisterendeLuke.alternativer
+                : quizSporsmal?.options || [],
+
+            riktigSvar:
+              req.body.riktigSvar ||
+              eksisterendeLuke?.riktigSvar ||
+              quizSporsmal?.correct_answer ||
+              "",
+            media:
+              req.body.media ||
+              eksisterendeLuke?.media ||
+              quizSporsmal?.video_url ||
+              "",
+            mediaType:
+              req.body.mediaType || eksisterendeLuke?.mediaType || "ingen",
           },
         },
 
