@@ -162,13 +162,23 @@ app.get("/lukeDashboard", requireLogin, requireAdmin, (req, res) => {
 app.get("/lukeSvar", requireLogin, requireAdmin, async (req, res) => {
   try {
     const filter = {};
+    if (req.query.status === "riktig") {
+      filter.riktig = true;
+    }
+    if (req.query.status === "feil") {
+      filter.riktig = false;
+    }
+    if (req.query.status === "ikkeVurdert") {
+      filter.riktig = null;
+    }
     if (req.query.lukeNr) {
       filter.lukeNr = Number(req.query.lukeNr);
     }
     const svar = await Svar.find(filter).sort({ createdAt: -1 });
-    const riktigSvar = svar.filter((s) => s.riktig === true)
-    const feilSvar = svar((s) => s.riktig === false)
-    const ikkeVurdert = svar.filter((s) => s.riktig === null)
+
+    const riktigSvar = svar.filter((s) => s.riktig === true);
+    const feilSvar = svar.filter((s) => s.riktig === false);
+    const ikkeVurdert = svar.filter((s) => s.riktig === null);
 
     const luker = await Luke.find();
 

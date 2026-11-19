@@ -16,6 +16,14 @@
       </option>
       <% } %>
     </select>
+    <label for="statusFilter">Sorter etter status:</label>
+
+    <select name="status" id="statusFilter">
+      <option value="">Alle svar</option>
+      <option value="riktig">Riktige svar</option>
+      <option value="feil">Feil svar</option>
+      <option value="ikkeVurdert">Ikke vurdert</option>
+    </select>
     <button type="submit">Sorter</button>
   </form>
   <% if (svar.length === 0) { %>
