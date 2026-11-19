@@ -6,12 +6,13 @@
 
   <h1>Deltakere svar</h1>
   <form action="/lukeSvar" method="get">
+
     <label for="lukeFilter">Sorter etter luke:</label>
     <select name="lukeNr" id="lukeFilter">
-      <option value="">Alle luker</option>
+      <option value="" <%= valgtLuke === "" ? "selected" : "" %>>Alle luker</option>
 
       <% for (let i = 1; i <= 24; i++) { %>
-      <option value="<%= i %>">
+      <option value="<%= i %>" <%= valgtLuke === String(i) ? "selected" : "" %>>
         Luke <%= i  %>
       </option>
       <% } %>
@@ -19,10 +20,10 @@
     <label for="statusFilter">Sorter etter status:</label>
 
     <select name="status" id="statusFilter">
-      <option value="">Alle svar</option>
-      <option value="riktig">Riktige svar</option>
-      <option value="feil">Feil svar</option>
-      <option value="ikkeVurdert">Ikke vurdert</option>
+      <option value="" <%= valgtStatus === "" ? "selected" : "" %>>Alle svar</option>
+      <option value="riktig" <%= valgtStatus === "riktig" ? "selected" : "" %>>Riktige svar</option>
+      <option value="feil" <%= valgtStatus === "feil" ? "selected" : "" %>>Feil svar</option>
+      <option value="ikkeVurdert" <%= valgtStatus === "ikkeVurdert" ? "selected" : "" %>>Ikke vurdert</option>
     </select>
     <button type="submit">Sorter</button>
   </form>
@@ -31,7 +32,7 @@
   <% } else { %>
 
   <% svar.forEach(function(s) { %>
-  <div class="svar">
+  <div class="svar" id="svar-<%= s._id %>">
     <h2>Luke <%= s.lukeNr %></h2>
 
 
@@ -48,6 +49,18 @@
       Ikke vurdert
       <% } %>
     </p>
+    <form class="vurderingsskjema" action="/lukeSvar/<%= s._id %>/vurder" method="post">
+      <input type="hidden" name="riktig" value="true">
+      <button type="submit">Marker som riktig</button>
+      <input type="hidden" name="lukeNr" value="<%= valgtLuke %>">
+      <input type="hidden" name="status" value="<%= valgtStatus %>">
+    </form>
+    <form class="vurderingsskjema" action="/lukeSvar/<%= s._id %>/vurder" method="post">
+      <input type="hidden" name="riktig" value="false">
+      <button type="submit">Marker som feil</button>
+      <input type="hidden" name="lukeNr" value="<%= valgtLuke %>">
+      <input type="hidden" name="status" value="<%= valgtStatus %>">
+    </form>
     <p>Deltaker-ID: <%= s.userId %></p>
 
     <p>
@@ -61,6 +74,22 @@
   <% }); %>
 
   <% } %>
+  <script>
+    // Lagrer hvor langt ned på siden vi har scrollet før skjemaet sendes.
+    document.querySelectorAll(".vurderingsskjema").forEach((skjema) => {
+      skjema.addEventListener("submit", () => {
+        sessionStorage.setItem("svarScroll", window.scrollY);
+      });
+    });
+
+    // Henter tilbake scroll-posisjonen etter at siden lastes inn igjen.
+    const lagretScroll = sessionStorage.getItem("svarScroll");
+
+    if (lagretScroll !== null) {
+      window.scrollTo(0, Number(lagretScroll));
+      sessionStorage.removeItem("svarScroll");
+    }
+  </script>
 </body>
 
 </html>
