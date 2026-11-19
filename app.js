@@ -288,9 +288,9 @@ app.get("/luke/:lukeNr", optionalLogin, async (req, res) => {
 
     // Sender både luke-informasjonen og quiz-spørsmålet til EJS.
     res.render("luke", {
-//sjekker om brukeren nettop sendte et svar
+      //sjekker om brukeren nettop sendte et svar
       submitted: req.query.submitted === "true",
-
+      eksisterendeSvar: req.query.eksisterendeSvar === "true",
       luke: luke,
       quizSporsmal: quizSporsmal,
 
@@ -303,7 +303,7 @@ app.get("/luke/:lukeNr", optionalLogin, async (req, res) => {
   }
 });
 
-app.post("/luke/:lukeNr/svar", requireLogin, requireAdmin, async (req, res) => {
+app.post("/luke/:lukeNr/svar", requireLogin, async (req, res) => {
   try {
     const lukeNr = Number(req.params.lukeNr);
 
@@ -323,13 +323,24 @@ app.post("/luke/:lukeNr/svar", requireLogin, requireAdmin, async (req, res) => {
       return res.status(404).send("Denne luken finnes ikke");
     }
 
+    //sjekker db om det er et svar med denne brukerens id for denne luken sitt spørsmål
+    const eksisterendeSvar = await Svar.findOne({
+      lukeNr: lukeNr,
+      userId: req.user._id,
+    });
+
+    //hvis det er det, skal den ikke sende in et svar.
+    if (eksisterendeSvar) {
+      return res.redirect(`/luke/${lukeNr}?eksisterendeSvar=true`);
+    }
+
     await Svar.create({
       lukeNr: lukeNr,
       userId: req.user._id,
       svar: svar.trim(),
     });
 
-    res.redirect(`/luke/${lukeNr}?submitter=true`);
+    res.redirect(`/luke/${lukeNr}?submitted=true`);
   } catch (error) {
     console.log(error);
     res.status(500).send("Kunne ikke lagre svaret.");

@@ -51,13 +51,22 @@
   <% } %>
 
 
-<% if (submitted) { %> 
-<div>
+
+  <!-- //gir deg en liten meldig som sier at du har sendt et svar -->
+  <% if (submitted) { %>
+  <div>
     <h2>
-        Svaret ditt er sendt inn! Tusen takk!
+      Svaret ditt er sendt inn! Tusen takk!
     </h2>
-</div>
-<% } %>
+  </div>
+  <% } %>
+  <% if (submitted) { %>
+  <p>Svaret ditt er lagret!</p>
+  <% } %>
+
+  <% if (eksisterendeSvar) {  %>
+  <p>Du har allerede svart på dette spørsmålet</p>
+  <% } %>
   <% if (loggedIn && sporsmalstekst) { %>
   <form action="/luke/<%= luke.lukeNr %>/svar" method="post">
     <% if (quizSporsmal?.type === "multiple_choice") { %>
