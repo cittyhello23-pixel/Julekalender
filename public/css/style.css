@@ -83,6 +83,19 @@ nav a {
   text-decoration: none;
   color: var(--snow);
 }
+
+.glassWrap {
+  width: 80vw;
+  height: 70vh;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-radius: 30px;
+  background: var(--glass);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1.7px solid rgba(223, 216, 126, 0.4);
+}
 #indexH1 {
   font-size: 6rem;
 }
@@ -96,15 +109,31 @@ nav a {
   place-items: center;
 }
 .luke {
-  width: 17vh;
-  height: 17vh;
+  width: 20vh;
+  height: 20vh;
   background-color: #dddee4;
   margin: 20px 0;
   border-radius: 1.2rem;
-  text-align: center;
-  text
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0b1038;
+  font-family: var(--h1);
+  font-size: 2rem;
+  perspective: 1200px;
+  transition: transform 0.2s ease;
 }
 
-.luke a {
-  display: flex-direction: display: display: display: ;;;;;
+.luke:hover {
+  transition: transform 0.2s ease;
+  transform: translateY(-8px) rotate(1deg) scale(1.03);
+}
+.fortid {
+  background-color: var(--snow);
+}
+.idag {
+  background-color: var(--gold-d);
+}
+.framtid {
+  background-color: var(--blue);
 }

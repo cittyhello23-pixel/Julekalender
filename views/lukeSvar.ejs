@@ -14,7 +14,16 @@
   <div class="svar">
     <h2>Luke <%= s.lukeNr %></h2>
 
-    <p>Elev svar: <%= s.svar %></p>
+    <p>
+      Status:
+      <% if (s.riktig === true) { %>
+      Riktig
+      <% } else if (s.riktig === false) { %>
+      Feil
+      <% } else { %>
+      Ikke vurdert
+      <% } %>
+    </p>
     <p>Riktig svar: <%= s.riktigSvar %></p>
 
     <p>Deltaker-ID: <%= s.userId %></p>

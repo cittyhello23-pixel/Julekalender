@@ -162,6 +162,11 @@ app.get("/lukeDashboard", requireLogin, requireAdmin, (req, res) => {
 app.get("/lukeSvar", requireLogin, requireAdmin, async (req, res) => {
   try {
     const svar = await Svar.find().sort({ createdAt: -1 });
+    const luker = await Luke.find();
+
+    const quiz = await quizCollection.findOne({
+      _id: "christmas-quiz",
+    });
 
     res.render("lukeSvar", { svar: svar });
     svar: svar;
@@ -333,6 +338,13 @@ app.post("/luke/:lukeNr/svar", requireLogin, async (req, res) => {
     const riktigSvar =
       luke?.riktigSvar?.trim() || quizSporsmal?.correct_answer?.trim() || "";
 
+    let riktig = null;
+    if (luke?.svarType === "multiple_choice") {
+      riktig =
+        svar.trim().toLocaleLowerCase("no-NO") ===
+        riktigSvar.toLocaleLowerCase("no-NO");
+    }
+
     if (luke && !luke.aktiv) {
       return res.status(404).send("Denne luken finnes ikke");
     }
@@ -352,6 +364,7 @@ app.post("/luke/:lukeNr/svar", requireLogin, async (req, res) => {
       lukeNr: lukeNr,
       userId: req.user._id,
       svar: svar.trim(),
+      riktig: riktig,
     });
 
     res.redirect(`/luke/${lukeNr}?submitted=true`);
