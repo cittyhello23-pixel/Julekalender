@@ -4,8 +4,28 @@
 <body>
   <%- include("./partials/nav.ejs") %>
 
-  <h1>Alle svar</h1>
+  <h1>Deltakere svar</h1>
+  <form action="/lukeSvar" method="get">
+    <label for="lukeFilter">Sorter etter luke:</label>
+    <select name="lukeNr" id="lukeFilter">
+      <option value="">Alle luker</option>
 
+      <% for (let i = 1; i <= 24; i++) { %>
+      <option value="<%= i %>">
+        Luke <%= i  %>
+      </option>
+      <% } %>
+    </select>
+    <label for="statusFilter">Sorter etter status:</label>
+
+    <select name="status" id="statusFilter">
+      <option value="">Alle svar</option>
+      <option value="riktig">Riktige svar</option>
+      <option value="feil">Feil svar</option>
+      <option value="ikkeVurdert">Ikke vurdert</option>
+    </select>
+    <button type="submit">Sorter</button>
+  </form>
   <% if (svar.length === 0) { %>
   <p>Ingen svar er sendt inn enda.</p>
   <% } else { %>
@@ -14,9 +34,20 @@
   <div class="svar">
     <h2>Luke <%= s.lukeNr %></h2>
 
-    <p>Elev svar: <%= s.svar %></p>
-    <p>Riktig svar: <%= s.riktigSvar %></p>
 
+    <p>Elev svar: <%= s.svar %></p>
+
+    <p>Riktig svar: <%= s.riktigSvar %></p>
+    <p>
+      Status:
+      <% if (s.riktig === true) { %>
+      Riktig
+      <% } else if (s.riktig === false) { %>
+      Feil
+      <% } else { %>
+      Ikke vurdert
+      <% } %>
+    </p>
     <p>Deltaker-ID: <%= s.userId %></p>
 
     <p>

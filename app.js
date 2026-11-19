@@ -161,10 +161,51 @@ app.get("/lukeDashboard", requireLogin, requireAdmin, (req, res) => {
 //sjekker at bruker er admin, tar alle svar gra mongodb, nyeste først, og sender til ejs
 app.get("/lukeSvar", requireLogin, requireAdmin, async (req, res) => {
   try {
-    const svar = await Svar.find().sort({ createdAt: -1 });
+    const filter = {};
+    if (req.query.status === "riktig") {
+      filter.riktig = true;
+    }
+    if (req.query.status === "feil") {
+      filter.riktig = false;
+    }
+    if (req.query.status === "ikkeVurdert") {
+      filter.riktig = null;
+    }
+    if (req.query.lukeNr) {
+      filter.lukeNr = Number(req.query.lukeNr);
+    }
+    const svar = await Svar.find(filter).sort({ createdAt: -1 });
 
-    res.render("lukeSvar", { svar: svar });
-    svar: svar;
+    const riktigSvar = svar.filter((s) => s.riktig === true);
+    const feilSvar = svar.filter((s) => s.riktig === false);
+    const ikkeVurdert = svar.filter((s) => s.riktig === null);
+
+    const luker = await Luke.find();
+
+    const quiz = await quizCollection().findOne({
+      _id: "christmas-quiz",
+    });
+
+    const svarMedRiktigSvar = svar.map((s) => {
+      //finner luken som eleven svarte på
+      const luke = luker.find((l) => l.lukeNr === s.lukeNr);
+
+      //spørsmålet med samme luke nrs
+      const quizSporsmal = quiz?.questions?.find((q) => q.id === s.lukeNr);
+
+      //henter det riktige svare fra enten luke kolleksjon eller quiz.
+      const riktigSvar =
+        luke?.riktigSvar?.trim() ||
+        quizSporsmal?.correct_answer?.trim() ||
+        "ikke gitt";
+
+      return {
+        ...s.toObject(),
+        riktigSvar: riktigSvar,
+      };
+    });
+
+    res.render("lukeSvar", { svar: svarMedRiktigSvar });
   } catch (error) {
     res.status(500).send("Kunne ikke hente svar.");
   }
@@ -333,6 +374,13 @@ app.post("/luke/:lukeNr/svar", requireLogin, async (req, res) => {
     const riktigSvar =
       luke?.riktigSvar?.trim() || quizSporsmal?.correct_answer?.trim() || "";
 
+    let riktig = null;
+    if (luke?.svarType === "multiple_choice") {
+      riktig =
+        svar.trim().toLocaleLowerCase("no-NO") ===
+        riktigSvar.toLocaleLowerCase("no-NO");
+    }
+
     if (luke && !luke.aktiv) {
       return res.status(404).send("Denne luken finnes ikke");
     }
@@ -352,6 +400,7 @@ app.post("/luke/:lukeNr/svar", requireLogin, async (req, res) => {
       lukeNr: lukeNr,
       userId: req.user._id,
       svar: svar.trim(),
+      riktig: riktig,
     });
 
     res.redirect(`/luke/${lukeNr}?submitted=true`);

@@ -4,115 +4,119 @@
 <!-- for at html skal eksistere FØR scriptet leter etter elementene og bestemmer at de ikke eksisterer -->
 
 <body>
+
   <%- include("./partials/nav.ejs") %>
+  <div class="glassWrap">
 
-  <!-- det meste teksten på luke sidene er dynamisk, så blir puttet inn med js. den tar infoen fra databasen den er koblet til. spesifikt fra "luke" kolleksjonen.-->
-  <h1>Luke <%= luke.lukeNr %></h1>
-  <h2><%= luke.tittel %></h2>
+    <!-- det meste teksten på luke sidene er dynamisk, så blir puttet inn med js. den tar infoen fra databasen den er koblet til. spesifikt fra "luke" kolleksjonen.-->
+    <h1>Luke <%= luke.lukeNr %></h1>
+    <h2><%= luke.tittel %></h2>
 
-  <% 
+    <% 
 //henter spørsmålet fra luke i db
     const sporsmalstekst = luke.sporsmal
   %>
 
-  <% if (sporsmalstekst) { %>
-  <p><%= sporsmalstekst %></p>
-  <% } %>
-
-  <!-- Viser svaralternativer hvis spørsmålet er multiple choice. -->
-  <% if (luke.svarType === "multiple_choice") { %>
-  <ul>
-    <% (luke.alternativer || []).forEach((option) => { %>
-    <li><%= option %></li>
-    <% }); %>
-  </ul>
-  <% } %>
-
-  <!-- en if statement, hvis mediatype er bilde skal den vise det bildet. hvis det er video, viser den videoen. så det er bare synlig hvis det er noe der. -->
-  <% if (luke.mediaType === "bilde" && luke.media) { %>
-  <img src="<%= luke.media %>" alt="Bilde til luke <%= luke.lukeNr %>">
-  <% } %>
-
-  <% if (luke.mediaType === "video" && luke.media) { %>
-  <video controls>
-    <source src="<%= luke.media %>">
-    Nettleseren din støtter ikke video.
-  </video>
-  <% } %>
-
-
-
-  <!-- //gir deg en liten meldig som sier at du har sendt et svar -->
-  <% if (submitted) { %>
-  <div>
-    <h2>
-      Svaret ditt er sendt inn! Tusen takk!
-    </h2>
-  </div>
-  <% } %>
-  <% if (submitted) { %>
-  <p>Svaret ditt er lagret!</p>
-  <% } %>
-
-  <% if (eksisterendeSvar) {  %>
-  <p>Du har allerede svart på dette spørsmålet</p>
-  <% } %>
-  <% if (loggedIn && sporsmalstekst) { %>
-  <form action="/luke/<%= luke.lukeNr %>/svar" method="post">
-    <% if (luke.svarType === "multiple_choice") { %>
-    <h3>Velg svaret ditt:</h3>
-
-    <!-- for each loop for at hvert alternativ skal få en id. går gjennom alt i seed-->
-    <% (luke.alternativer || []).forEach((option, index) => { %>
-
-
-    <!-- lager et label for alle av de -->
-    <label for="alternativ<%= index %>">
-      <%= option %>
-    </label>
-
-
-    <!-- radio knapp som lar eleven velge svar -->
-    <input type="radio" name="svar" id="alternativ<%= index %>" value="<%= option %>" required>
-
-    <% }); %>
-
-    <!-- //hvis det ikke er et alternativt svar, er det åpent. -->
-    <% } else { %>
-
-    <label for="svar">Skriv svaret ditt:</label>
-    <textarea name="svar" id="svar" placeholder="Skriv ditt svar her..." required></textarea>
+    <% if (sporsmalstekst) { %>
+    <p><%= sporsmalstekst %></p>
     <% } %>
-    <button type="submit">Send inn svaret ♡</button>
-  </form>
-  <% } %>
 
-  <!-- //script for en popup hvis man går in på en luke uten å være logget inn. siden det er !loggedIn, vises den bare hvis man ikke er logget inn. -->
-  <% if (!loggedIn) { %>
+    <!-- Viser svaralternativer hvis spørsmålet er multiple choice. -->
+    <% if (luke.svarType === "multiple_choice") { %>
+    <ul>
+      <% (luke.alternativer || []).forEach((option) => { %>
+      <li><%= option %></li>
+      <% }); %>
+    </ul>
+    <% } %>
 
-  <div class="loginPopup" id="loginPopup">
-    <div class="loginPopupInnhold">
-      <button type="button" class="closePopup" onclick="closePopup()">
-        ×
-      </button>
+    <!-- en if statement, hvis mediatype er bilde skal den vise det bildet. hvis det er video, viser den videoen. så det er bare synlig hvis det er noe der. -->
+    <% if (luke.mediaType === "bilde" && luke.media) { %>
+    <img src="<%= luke.media %>" alt="Bilde til luke <%= luke.lukeNr %>">
+    <% } %>
+
+    <% if (luke.mediaType === "video" && luke.media) { %>
+    <video controls>
+      <source src="<%= luke.media %>">
+      Nettleseren din støtter ikke video.
+    </video>
+    <% } %>
+
+
+
+    <!-- //gir deg en liten meldig som sier at du har sendt et svar -->
+    <% if (submitted) { %>
+    <div>
       <h2>
-        Å nei!
+        Svaret ditt er sendt inn! Tusen takk!
       </h2>
-      <h3>
-        Du er ikke logget inn!
-      </h3>
-      <p>
-        For å delta i julekalenderen og sende inn svar, må du logge inn med din skole E-post.
-      </p>
-      <a href="
-       /login " class="popupButton">Logg inn her ♡</a>
-      <button type="button" class="senere" onclick="closePopup()">Kanskje senere</button>
     </div>
+    <% } %>
+    <% if (submitted) { %>
+    <p>Svaret ditt er lagret!</p>
+    <% } %>
+
+    <% if (eksisterendeSvar) {  %>
+    <p>Du har allerede svart på dette spørsmålet</p>
+    <% } %>
+    <% if (loggedIn && sporsmalstekst) { %>
+    <form action="/luke/<%= luke.lukeNr %>/svar" method="post">
+      <% if (luke.svarType === "multiple_choice") { %>
+      <h3>Velg svaret ditt:</h3>
+
+      <!-- for each loop for at hvert alternativ skal få en id. går gjennom alt i seed-->
+      <% (luke.alternativer || []).forEach((option, index) => { %>
+
+
+      <!-- lager et label for alle av de -->
+      <label for="alternativ<%= index %>">
+        <%= option %>
+      </label>
+
+
+      <!-- radio knapp som lar eleven velge svar -->
+      <input type="radio" name="svar" id="alternativ<%= index %>" value="<%= option %>" required>
+
+      <% }); %>
+
+      <!-- //hvis det ikke er et alternativt svar, er det åpent. -->
+      <% } else { %>
+
+      <label for="svar">Skriv svaret ditt:</label>
+      <textarea name="svar" id="svar" placeholder="Skriv ditt svar her..." required></textarea>
+      <% } %>
+      <button type="submit">Send inn svaret ♡</button>
+    </form>
+    <% } %>
+
+    <!-- //script for en popup hvis man går in på en luke uten å være logget inn. siden det er !loggedIn, vises den bare hvis man ikke er logget inn. -->
+    <% if (!loggedIn) { %>
+
+    <div class="loginPopup" id="loginPopup">
+      <div class="loginPopupInnhold">
+        <button type="button" class="closePopup" onclick="closePopup()">
+          ×
+        </button>
+        <h2>
+          Å nei!
+        </h2>
+        <h3>
+          Du er ikke logget inn!
+        </h3>
+        <p>
+          For å delta i julekalenderen og sende inn svar, må du logge inn med din skole E-post.
+        </p>
+        <a href="
+       /login " class="popupButton">Logg inn her ♡</a>
+        <button type="button" class="senere" onclick="closePopup()">Kanskje senere</button>
+      </div>
+    </div>
+
+    <script src="/js/popup.js"></script>
+
+    <% } %>
   </div>
 
-  <script src="/js/popup.js"></script>
-
-  <% } %>
 </body>
 
 </html>
