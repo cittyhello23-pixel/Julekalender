@@ -85,7 +85,7 @@ const optionalLogin = async (req, res, next) => {
 
 //sjekker om de er admin
 const requireAdmin = (req, res, next) => {
-  if (req.user.role !== "admin") {
+  if (!req.user || req.user.role !== "admin") {
     return res.status(403).send("Du har ikke tilgang til denne siden.");
   }
   next();
@@ -154,11 +154,20 @@ app.post("/login", async (req, res) => {
   }
 });
 
-app.get("/lukeDashboard", requireLogin, (req, res) => {
+app.get("/lukeDashboard", requireLogin, requireAdmin, (req, res) => {
   res.render("lukeDashboard");
 });
-app.get("/lukeSvar", requireLogin, (req, res) => {
-  res.render("lukeSvar");
+
+//sjekker at bruker er admin, tar alle svar gra mongodb, nyeste først, og sender til ejs
+app.get("/lukeSvar", requireLogin, requireAdmin, async (req, res) => {
+  try {
+    const svar = await Svar.find().sort({ createdAt: -1 });
+
+    res.render("lukeSvar", { svar: svar });
+    svar: svar;
+  } catch (error) {
+    res.status(500).send("Kunne ikke hente svar.");
+  }
 });
 
 //dato sjekk
@@ -312,6 +321,17 @@ app.post("/luke/:lukeNr/svar", requireLogin, async (req, res) => {
     }
 
     const luke = await Luke.findOne({ lukeNr: lukeNr });
+
+    const quiz = await quizCollection().findOne({
+      _id: "christmas-quiz",
+    });
+
+    const quizSporsmal = quiz?.questions?.find(
+      (question) => question.id === lukeNr,
+    );
+
+    const riktigSvar =
+      luke?.riktigSvar?.trim() || quizSporsmal?.correct_answer?.trim() || "";
 
     if (luke && !luke.aktiv) {
       return res.status(404).send("Denne luken finnes ikke");

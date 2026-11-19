@@ -19,15 +19,31 @@
     #c8f2e8 90%,
     #fff
   );
-   --h1: 'Berkshire Swash', cursive;
-  --h2: 'Marmelad', cursive;
-  --h3: 'Readex Pro', sans-serif;
-  --p: 'SN Pro', sans-serif;
-;
+  --h1: "Berkshire Swash", cursive;
+  --h2: "Marmelad", cursive;
+  --h3: "Readex Pro", sans-serif;
+  --p: "SN Pro", sans-serif;
 }
 
 body {
-  margin: 40px 60px;
+  margin: 20px 60px;
+}
+body h1 {
+  font-family: var(--h1);
+  font-size: 3.5rem;
+  margin: 1vw;
+}
+body h2 {
+  font-family: var(--h2);
+  font-size: 2rem;
+  margin: 1vw;
+}
+body p {
+  font-family: var(--p);
+  margin: 1vw;
+}
+a {
+  text-decoration: none;
 }
 
 .bgVid {
@@ -42,6 +58,9 @@ body {
 
 nav {
   display: flex;
+  position: sticky;
+  top: 0;
+  z-index: 3;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
@@ -63,4 +82,29 @@ nav a {
   font-family: var(--h2);
   text-decoration: none;
   color: var(--snow);
+}
+#indexH1 {
+  font-size: 6rem;
+}
+#indexP {
+  font-size: 1.3rem;
+}
+.kalender {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+
+  place-items: center;
+}
+.luke {
+  width: 17vh;
+  height: 17vh;
+  background-color: #dddee4;
+  margin: 20px 0;
+  border-radius: 1.2rem;
+  text-align: center;
+  text
+}
+
+.luke a {
+  display: flex-direction: display: display: display: ;;;;;
 }

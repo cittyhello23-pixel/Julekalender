@@ -4,14 +4,31 @@
 <body>
   <%- include("./partials/nav.ejs") %>
 
-  <h1>Rediger julekalender</h1>
+  <div>
+    <h1>
+      oversikt
+    </h1>
+  </div>
+  <div>
 
-  <% for (let i = 1; i <= 24; i++) { %>
-  <a href="/admin/luke/<%= i %>">
-    Rediger luke <%= i %>
-  </a>
-  <% } %>
+    <h1>Rediger julekalender</h1>
 
+    <% for (let i = 1; i <= 24; i++) { %>
+    <a href="/admin/luke/<%= i %>">
+      Rediger luke <%= i %>
+    </a>
+    <% } %>
+  </div>
+  <div>
+    <h1>deltakere</h1>
+  </div>
+  <div>
+    <h1>svar</h1>
+  </div>
+
+  <div>
+    <h1>vinnere</h1>
+  </div>
 </body>
 
 </html>

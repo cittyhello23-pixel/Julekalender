@@ -1,9 +1,35 @@
-<%- include ("./partials/head.ejs") %>
+<html lang="en">
+<%- include("./partials/head.ejs") %>
 
 <body>
-  <%- include ("./partials/nav.ejs") %>
+  <%- include("./partials/nav.ejs") %>
 
+  <h1>Alle svar</h1>
 
+  <% if (svar.length === 0) { %>
+  <p>Ingen svar er sendt inn enda.</p>
+  <% } else { %>
+
+  <% svar.forEach(function(s) { %>
+  <div class="svar">
+    <h2>Luke <%= s.lukeNr %></h2>
+
+    <p>Elev svar: <%= s.svar %></p>
+    <p>Riktig svar: <%= s.riktigSvar %></p>
+
+    <p>Deltaker-ID: <%= s.userId %></p>
+
+    <p>
+      Sendt inn:
+      <%= s.createdAt
+              ? new Date(s.createdAt).toLocaleString("no-NO")
+              : "Ukjent" %>
+    </p>
+  </div>
+  <hr>
+  <% }); %>
+
+  <% } %>
 </body>
 
 </html>

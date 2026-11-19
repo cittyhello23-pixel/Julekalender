@@ -25,6 +25,10 @@ const svarSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  riktig: {
+    type: Boolean,
+    default: null,
+  },
 });
 
 const Svar = mongoose.model("Svar", svarSchema);
