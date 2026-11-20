@@ -1,79 +1,143 @@
-<html lang="en">
+<html lang="no">
 <%- include("./partials/head.ejs") %>
 
 <body>
   <%- include("./partials/nav.ejs") %>
 
-  <h1>Deltakere svar</h1>
-  <form action="/lukeSvar" method="get">
+  <section class="reportIntro">
+    <span class="sectionLabel">ADMINISTRASJON</span>
+    <h1>Svarrapport</h1>
+    <p>Oversikt over elevenes innsendte svar.</p>
+  </section>
 
-    <label for="lukeFilter">Sorter etter luke:</label>
-    <select name="lukeNr" id="lukeFilter">
-      <option value="" <%= valgtLuke === "" ? "selected" : "" %>>Alle luker</option>
+  <section class="section reportSection">
+    <div id="reportTop">
 
-      <% for (let i = 1; i <= 24; i++) { %>
-      <option value="<%= i %>" <%= valgtLuke === String(i) ? "selected" : "" %>>
-        Luke <%= i  %>
-      </option>
-      <% } %>
-    </select>
-    <label for="statusFilter">Sorter etter status:</label>
+      <form action="/lukeSvar" method="get" class="filterForm">
+        <h2>Sortering</h2>
+        <div id="filterWrap">
 
-    <select name="status" id="statusFilter">
-      <option value="" <%= valgtStatus === "" ? "selected" : "" %>>Alle svar</option>
-      <option value="riktig" <%= valgtStatus === "riktig" ? "selected" : "" %>>Riktige svar</option>
-      <option value="feil" <%= valgtStatus === "feil" ? "selected" : "" %>>Feil svar</option>
-      <option value="ikkeVurdert" <%= valgtStatus === "ikkeVurdert" ? "selected" : "" %>>Ikke vurdert</option>
-    </select>
-    <button type="submit">Sorter</button>
-  </form>
-  <% if (svar.length === 0) { %>
-  <p>Ingen svar er sendt inn enda.</p>
-  <% } else { %>
+          <div class="filterField">
+            <label for="lukeFilter">Luke</label>
+            <select name="lukeNr" id="lukeFilter">
+              <option value="" <%= valgtLuke === "" ? "selected" : "" %>>
+                Alle luker
+              </option>
 
-  <% svar.forEach(function(s) { %>
-  <div class="svar" id="svar-<%= s._id %>">
-    <h2>Luke <%= s.lukeNr %></h2>
+              <% for (let i = 1; i <= 24; i++) { %>
+              <option value="<%= i %>" <%= valgtLuke === String(i) ? "selected" : "" %>>
+                Luke <%= i %>
+              </option>
+              <% } %>
+            </select>
+          </div>
 
+          <div class="filterField">
+            <label for="statusFilter">Status</label>
+            <select name="status" id="statusFilter">
+              <option value="" <%= valgtStatus === "" ? "selected" : "" %>>
+                Alle svar
+              </option>
+              <option value="riktig" <%= valgtStatus === "riktig" ? "selected" : "" %>>
+                Riktige svar
+              </option>
+              <option value="feil" <%= valgtStatus === "feil" ? "selected" : "" %>>
+                Feil svar
+              </option>
+              <option value="ikkeVurdert" <%= valgtStatus === "ikkeVurdert" ? "selected" : "" %>>
+                Ikke vurdert
+              </option>
+            </select>
+          </div>
+        </div>
 
-    <p>Elev svar: <%= s.svar %></p>
+        <button type="submit">Filtrer</button>
+      </form>
+      <div class="totalAnswers">
+        <span><%= svar.length %> Svar funnet</span>
+      </div>
+    </div>
+    <div id="reportHeading">
+      <h2>Innsendte svar</h2>
+    </div>
 
-    <p>Riktig svar: <%= s.riktigSvar %></p>
-    <p>
-      Status:
-      <% if (s.riktig === true) { %>
-      Riktig
-      <% } else if (s.riktig === false) { %>
-      Feil
-      <% } else { %>
-      Ikke vurdert
-      <% } %>
-    </p>
-    <form class="vurderingsskjema" action="/lukeSvar/<%= s._id %>/vurder" method="post">
-      <input type="hidden" name="riktig" value="true">
-      <button type="submit">Marker som riktig</button>
-      <input type="hidden" name="lukeNr" value="<%= valgtLuke %>">
-      <input type="hidden" name="status" value="<%= valgtStatus %>">
-    </form>
-    <form class="vurderingsskjema" action="/lukeSvar/<%= s._id %>/vurder" method="post">
-      <input type="hidden" name="riktig" value="false">
-      <button type="submit">Marker som feil</button>
-      <input type="hidden" name="lukeNr" value="<%= valgtLuke %>">
-      <input type="hidden" name="status" value="<%= valgtStatus %>">
-    </form>
-    <p>Deltaker-ID: <%= s.userId %></p>
+    <% if (svar.length === 0) { %>
 
-    <p>
-      Sendt inn:
-      <%= s.createdAt
-              ? new Date(s.createdAt).toLocaleString("no-NO")
-              : "Ukjent" %>
-    </p>
-  </div>
-  <hr>
-  <% }); %>
+    <div class="emptyReport">
+      <span>✧</span>
+      <p>Ingen svar er sendt inn enda.</p>
+    </div>
 
-  <% } %>
+    <% } else { %>
+
+    <div class="answerList">
+      <% svar.forEach(function(s) { %>
+
+      <article class="answerCard" id="svar-<%= s._id %>">
+
+        <div class="answerTop">
+          <span class="answerLuke">LUKE <%= s.lukeNr %></span>
+
+          <span class="answerStatus answerTop <%= s.riktig === true ? 'statusCorrect' : s.riktig === false ? 'statusWrong' : 'statusPending' %>">
+            <% if (s.riktig === true) { %>
+            Riktig
+            <% } else if (s.riktig === false) { %>
+            Feil
+            <% } else { %>
+            Ikke vurdert
+            <% } %>
+          </span>
+        </div>
+
+        <div class="answerContent">
+          <div class="answerDiv">
+            <span class="answerLabel">ELEVENS SVAR</span>
+            <p><%= s.svar %></p>
+          </div>
+
+          <div>
+            <span class="answerLabel">RIKTIG SVAR</span>
+            <p><%= s.riktigSvar %></p>
+          </div>
+        </div>
+
+        <div class="answerMeta">
+          <span>
+            Deltaker-ID: <%= s.userId %>
+          </span>
+
+          <span>
+            <%= s.createdAt
+                  ? new Date(s.createdAt).toLocaleString("no-NO")
+                  : "Ukjent dato" %>
+          </span>
+        </div>
+
+        <div class="gradingActions">
+          <form class="vurderingsskjema" action="/lukeSvar/<%= s._id %>/vurder" method="post">
+            <input type="hidden" name="riktig" value="true">
+            <input type="hidden" name="lukeNr" value="<%= valgtLuke %>">
+            <input type="hidden" name="status" value="<%= valgtStatus %>">
+            <button type="submit" class="markCorrect">Marker riktig</button>
+          </form>
+
+          <form class="vurderingsskjema" action="/lukeSvar/<%= s._id %>/vurder" method="post">
+            <input type="hidden" name="riktig" value="false">
+            <input type="hidden" name="lukeNr" value="<%= valgtLuke %>">
+            <input type="hidden" name="status" value="<%= valgtStatus %>">
+            <button type="submit" class="markWrong">Marker feil</button>
+          </form>
+        </div>
+
+      </article>
+
+      <% }); %>
+    </div>
+
+    <% } %>
+
+  </section>
+
   <script>
     // Lagrer hvor langt ned på siden vi har scrollet før skjemaet sendes.
     document.querySelectorAll(".vurderingsskjema").forEach((skjema) => {
@@ -90,6 +154,7 @@
       sessionStorage.removeItem("svarScroll");
     }
   </script>
+
 </body>
 
 </html>

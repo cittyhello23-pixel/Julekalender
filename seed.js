@@ -51,7 +51,7 @@ const questions = [
     id: 4,
     type: "video",
     question: "Se videoen og svar: Hvilken juleklassiker er dette?",
-    video_url: "https://www.youtube.com/watch?v=E8gmARGvPlI",
+    video_url: "https://www.w3schools.com/html/mov_bbb.mp4",
     correct_answer: "Last Christmas – Wham!",
   },
   {
@@ -71,7 +71,7 @@ const questions = [
     id: 7,
     type: "video",
     question: "Se videoen og svar: Hvem synger denne julesangen?",
-    video_url: "https://www.youtube.com/watch?v=aAkMkVFwAoo",
+    video_url: "https://www.w3schools.com/html/mov_bbb.mp4",
     correct_answer: "Mariah Carey",
   },
   {
@@ -117,7 +117,7 @@ const questions = [
     id: 14,
     type: "video",
     question: "Se videoen og svar: Hvilken sang hører du?",
-    video_url: "https://www.youtube.com/watch?v=3CWJNqyub3o",
+    video_url: "https://www.w3schools.com/html/mov_bbb.mp4",
     correct_answer: "Jingle Bell Rock",
   },
   {
@@ -152,7 +152,7 @@ const questions = [
     id: 19,
     type: "video",
     question: "Se videoen og svar: Hvilken julefilm kommer dette klippet fra?",
-    video_url: "https://www.youtube.com/watch?v=e7dfCs0z5Eg",
+    video_url: "https://www.w3schools.com/html/mov_bbb.mp4",
     correct_answer: "Hjemme alene",
   },
   {
@@ -200,7 +200,7 @@ async function seed() {
       await Luke.findOneAndUpdate(
         { lukeNr: question.id },
         {
-          $setOnInsert: {
+          $set: {
             sporsmal: question.question,
             svarType: svarType,
             alternativer: question.options || [],

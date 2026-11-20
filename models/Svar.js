@@ -11,7 +11,7 @@ const svarSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    default: null,
+    required: true,
   },
 
   //lagrer det de svarte
@@ -30,6 +30,10 @@ const svarSchema = new mongoose.Schema({
     default: null,
   },
 });
+
+
+// for at man ikke kan ungå et svar per luke per bruker ved å sende to svar sammtidig 
+svarSchema.index({ lukeNr: 1, userId: 1 }, { unique: true });
 
 const Svar = mongoose.model("Svar", svarSchema);
 

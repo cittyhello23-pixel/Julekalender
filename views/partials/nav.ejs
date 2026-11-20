@@ -1,11 +1,38 @@
-<nav>
-  <ul>
+<nav class="navbar">
+  <ul class="navLinks">
+    <!-- navigasjonslenker som vises på venstre side -->
     <li><a href="/">Kalender</a></li>
-    <li><a href="/login">Logg inn</a></li>
+
+    <!-- sjekker om brukeren er logget inn som admin -->
+    <% if (currentUser && currentUser.role === "admin") { %>
+    <!-- disse lenkene vises bare for admin -->
     <li><a href="/lukeDashboard">Admin dashboard</a></li>
-    <li><a href="/lukeSvar">Se svarrapport</a></li>
+    <li><a id="lukeSvarA" href="/lukeSvar">Se svarrapport</a></li>
+    <% } %>
+  </ul>
+
+  <!-- brukerrelaterte elementer som vises på høyre side -->
+  <ul class="navUser">
+    <!-- sjekker om noen er logget inn -->
+    <% if (currentUser) { %>
+    <!-- viser bare fornavnet til den innloggede brukeren -->
+    <li class="navHei">
+      Hei, <%= currentUser.navn.split(" ")[0] %>!
+    </li>
+
+    <li>
+      <!-- sender en post req til logout funksjon -->
+      <form action="/logout" method="POST">
+        <button type="submit" class="navLogout">Logg ut</button>
+      </form>
+    </li>
+    <% } else { %>
+    <li><a href="/login">Logg inn</a></li>
+    <% } %>
   </ul>
 </nav>
+
+<!-- bakgrunnsvideo som spilles automatisk, uten lyd og i loop -->
 <video class="bgVid" autoplay muted loop playsinline aria-hidden="true">
   <source src="/video/snow.mp4" type="video/mp4" />
 </video>

@@ -4,70 +4,100 @@
 <body>
   <%- include("./partials/nav.ejs") %>
 
-  <!-- den rare delen viser tallet fra linken du trykket på, så hvis det er luke 5, luke 5 er i url, det blir til et nummer objekt og det objektet vises i h1 hær -->
-  <h1>Rediger luke <%= luke.lukeNr %></h1>
+  <section class="editorIntro">
+    <a href="/lukeDashboard" class="backLink">← Tilbake til dashboard</a>
+    <span class="sectionLabel">ADMINISTRASJON / REDIGERING</span>
+    <h1>Rediger luke <%= luke.lukeNr %></h1>
+    <p>Endre innholdet som skal vises når elever åpner denne luken.</p>
+  </section>
 
-  <!-- //sier hvor infoen skal sendes. hvis det står /admin/luke/5, så skal infoen som blir postet redigere DEN luken -->
-  <form action="/admin/luke/<%= luke.lukeNr %>" method="post">
-
-    <label for="tittel">Tittel:</label>
-
-    <!-- text type for å lage et textfelt, id for styling mest, og navn for at express skal finne den når vi requester denne delen av body i app.js -->
-    <!-- value fyller det inni feltet fra før av med det som er lagred i tittel for den luken. det er default tomt i mongodb, så man kan ikke se noe hvis den ikke har blitt endret før. -->
-    <input type="text" name="tittel" id="tittel" value="<%= luke.tittel %>" />
+  <section class="section editorSection">
 
 
+    <!-- den rare delen viser tallet fra linken du trykket på, så hvis det er luke 5, luke 5 er i url, det blir til et nummer objekt og det objektet vises i h1 hær -->
+    <!-- //sier hvor infoen skal sendes. hvis det står /admin/luke/5, så skal infoen som blir postet redigere DEN luken -->
+    <form action="/admin/luke/<%= luke.lukeNr %>" method="post" class="editorForm">
 
-    <label for="sporsmal">Spørsmål:</label>
+      <div class="editorGroup">
+        <span class="sectionLabel">01 / INNHOLD</span>
+        <h2>Spørsmål og svar</h2>
 
-    <!-- textarea er en større versjon av text type, bra hvis man skal skrive mer en noen ord. -->
-    <!-- Hvis det finnes et manuelt spørsmål, vises det. Ellers vises spørsmålet fra seed-scriptet. -->
-    <textarea name="sporsmal" id="sporsmal"><%= luke.sporsmal || quizSporsmal?.question || "" %></textarea>
+        <label for="tittel">Tittel</label>
 
+        <!-- text type for å lage et textfelt, id for styling mest, og navn for at express skal finne den når vi requester denne delen av body i app.js -->
+        <!-- value fyller det inni feltet fra før av med det som er lagred i tittel for den luken. det er default tomt i mongodb, så man kan ikke se noe hvis den ikke har blitt endret før. -->
+        <input type="text" name="tittel" id="tittel" value="<%= luke.tittel %>" placeholder="F.eks. Dagens julequiz" />
 
-    <label for="svarType">Spørsmalstype:</label>
-    <select name="svarType" id="svarType">
-      <option value="open" <%= luke.svarType === "open" ? "selected" : "" %>>
-        Åpent spørsmål
-      </option>
-      <option value="multiple_choice" <%= luke.svarType === "multiple_choice"? "selected" : "" %>>
-        Flervalg
-      </option>
-      <option value="video" <%= luke.svarType === "video" ? "selected" : "" %>>
-        Video
-      </option>
-    </select>
+        <label for="sporsmal">Spørsmål</label>
 
-    <label for="alternativer">Svar alternativer (ett alternativ per linje):</label>
-    <textarea name="alternativer" id="alternativer"><%= (luke.alternativer?.length ? luke.alternativer : quizSporsmal?.options || []).join("\n") %></textarea>
+        <!-- textarea er en større versjon av text type, bra hvis man skal skrive mer en noen ord. -->
+        <!-- Hvis det finnes et manuelt spørsmål, vises det. Ellers vises spørsmålet fra seed-scriptet. -->
+        <textarea name="sporsmal" id="sporsmal" placeholder="Skriv spørsmålet her..."><%= luke.sporsmal || quizSporsmal?.question || "" %></textarea>
 
-    <label for="riktigSvar">Riktig svar</label>
-    <input type="text" name="riktigSvar" id="riktigSvar" value="<%= luke.riktigSvar || quizSporsmal?.correct_answer || '' %>">
+        <label for="svarType">Spørsmålstype</label>
+        <select name="svarType" id="svarType">
+          <option value="open" <%= luke.svarType === "open" ? "selected" : "" %>>
+            Åpent spørsmål
+          </option>
+          <option value="multiple_choice" <%= luke.svarType === "multiple_choice" ? "selected" : "" %>>
+            Flervalg
+          </option>
+        </select>
 
+        <label for="alternativer">Svaralternativer</label>
+        <span class="inputHint">Skriv ett alternativ per linje. Brukes bare ved flervalg.</span>
 
-    <!-- for å paste en link, og lar admin velge om det er video, bilde, eller uten media. -->
-    <label for="media">Media lenke:</label>
-    <input type="text" name="media" id="media" value="<%= luke.media %>" />
+        <textarea name="alternativer" id="alternativer" placeholder="Alternativ 1&#10;Alternativ 2&#10;Alternativ 3"><%= (luke.alternativer?.length ? luke.alternativer : quizSporsmal?.options || []).join("\n") %></textarea>
 
-    <label for="mediaType">Media type:</label>
-    <select name="mediaType" id="mediaType">
-      <option value="ingen" <%= luke.mediaType === "ingen" ? "selected" : "" %>>
-        Ingen
-      </option>
-      <option value="bilde" <%= luke.mediaType === "bilde" ? "selected" : "" %>>
-        Bilde
-      </option>
-      <option value="video" <%= luke.mediaType === "video" ? "selected" : "" %>>
-        Video
-      </option>
-    </select>
+        <label for="riktigSvar">Riktig svar</label>
+        <input type="text" name="riktigSvar" id="riktigSvar" value="<%= luke.riktigSvar || quizSporsmal?.correct_answer || '' %>" placeholder="Skriv riktig svar" />
+      </div>
 
-    <!-- Dette er en checkbox som du kan velge om du vil deaktivere luken når som helst. automatisk på, det er mer en backdoor hvis du har skrivet noe feil. brukes sjeldent. -->
-    <label for="aktiv">Aktiv:</label>
-    <input type="checkbox" name="aktiv" id="aktiv" value="true" <%= luke.aktiv ? "checked" : "" %> />
+      <div class="editorGroup">
+        <span class="sectionLabel">02 / MEDIA</span>
+        <h2>Bilde eller video</h2>
 
-    <button type="submit">Lagre endringer</button>
-  </form>
+        <!-- for å paste en link, og lar admin velge om det er video, bilde, eller uten media. -->
+        <label for="media">Media-lenke</label>
+        <input type="text" name="media" id="media" value="<%= luke.media %>" placeholder="https://..." />
+
+        <label for="mediaType">Media-type</label>
+        <select name="mediaType" id="mediaType">
+          <option value="ingen" <%= luke.mediaType === "ingen" ? "selected" : "" %>>
+            Ingen
+          </option>
+          <option value="bilde" <%= luke.mediaType === "bilde" ? "selected" : "" %>>
+            Bilde
+          </option>
+          <option value="video" <%= luke.mediaType === "video" ? "selected" : "" %>>
+            Video
+          </option>
+        </select>
+      </div>
+
+      <div class="editorGroup editorStatus">
+        <span class="sectionLabel">03 / STATUS</span>
+        <h2>Tilgjengelighet</h2>
+
+        <!-- Dette er en checkbox som du kan velge om du vil deaktivere luken når som helst. automatisk på, det er mer en backdoor hvis du har skrivet noe feil. brukes sjeldent. -->
+        <label class="activeToggle" for="aktiv">
+          <input type="checkbox" name="aktiv" id="aktiv" value="true" <%= luke.aktiv ? "checked" : "" %> />
+          <span>Aktiv luke</span>
+        </label>
+
+        <span class="inputHint">
+          Fjern haken for å deaktivere luken.
+        </span>
+      </div>
+
+      <div class="editorActions">
+        <a href="/lukeDashboard" class="cancelButton">Avbryt</a>
+        <button type="submit">Lagre endringer ♡</button>
+      </div>
+
+    </form>
+  </section>
+
 </body>
 
 </html>

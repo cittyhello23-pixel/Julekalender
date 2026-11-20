@@ -6,6 +6,7 @@ const cookieParser = require("cookie-parser"); // for å lese cookies
 const Luke = require("./models/Luke");
 const Svar = require("./models/Svar");
 const User = require("./models/User");
+const Vinner = require("./models/Vinner");
 
 const app = express();
 
@@ -100,7 +101,15 @@ const requireAdmin = (req, res, next) => {
   next();
 };
 
-//
+// sjekker login-status på alle sider og gjør brukeren tilgjengelig i EJS
+app.use((req, res, next) => {
+  optionalLogin(req, res, () => {
+    // res.locals gjør at currentUser er tilgjengelig i alle EJS-filer
+    res.locals.currentUser = req.user || null;
+    next();
+  });
+});
+
 //
 //
 //
@@ -179,7 +188,12 @@ app.post("/login", async (req, res) => {
   }
 });
 
-//
+// logger ut brukeren ved å slette login-cookien
+app.post("/logout", (req, res) => {
+  res.clearCookie("token");
+  res.redirect("/");
+});
+
 //
 //
 //
@@ -188,9 +202,188 @@ app.post("/login", async (req, res) => {
 // admin dashboard
 
 // viser admin dashboard
-app.get("/lukeDashboard", requireLogin, requireAdmin, (req, res) => {
-  res.render("lukeDashboard");
+
+app.get("/lukeDashboard", requireLogin, requireAdmin, async (req, res) => {
+  try {
+    // ny variabel som har tid og dato
+    const dato = new Date();
+
+    // siden js funksjonen for dato ikke automatisk går til ordentlig norsk tid gjør man det til det med dette. intl for internasjional formatering
+    // dag er objektet som har infoen til dager. den vet og sier at idag er idag.
+    const dag = Number(
+      new Intl.DateTimeFormat("en-US", {
+        timeZone: "Europe/Oslo",
+        day: "numeric",
+
+        // det er denne linjen som kjører formateringen, gjør strings til tall f eks
+      }).format(dato),
+    );
+
+    // dagens dato bestemmer hvilken luke vi skal trekke vinner for
+    // bruker ternary for en kort if else. hvis dag er større eller er lik 1, OG mindre eller er lik 24, bruk dag. hvis ikke, bruk null
+    const dagensLukeNr = dag >= 1 && dag <= 24 ? dag : null;
+
+    // det er denne som lager valgtLukeNr
+    // hvis admin har valgt en annen luke i meny bruker man den istedenfor dagens luke
+    let valgtLukeNr = req.query.lukeNr
+      ? Number(req.query.lukeNr)
+      : dagensLukeNr;
+
+    // sjekker at nummeret er valid, hvis det er det, velger vi den som luken vi skal trekke for
+    // hvis valgtLukeNr IKKE er et heltall, ELLER hvis det er for stort eller for lite, skal det ikke fungere
+    if (!Number.isInteger(valgtLukeNr) || valgtLukeNr < 1 || valgtLukeNr > 24) {
+      valgtLukeNr = dagensLukeNr;
+    }
+
+    // dagensVinner er, vel, den dagens vinner
+    // starter med null fordi den har ikke sjekket db enda. men hvis en vinner eksisterer, blir null erstattet
+    let dagensVinner = null;
+
+    // dette lagrer nummeret av svar dokumenter som kan bli trukket som vinner. exclude ikke vurderte og feil svar.
+    let antallKvalifiserte = 0;
+
+    // if statement, hvis det er en luke valgt skal den sjekke db for om det er en vinner for luken
+    if (valgtLukeNr) {
+      dagensVinner = await Vinner.findOne({
+        lukeNr: valgtLukeNr,
+        // leter etter navnet på personen med å reference uid'en i vinners med den i users, og tar navnet dems
+      }).populate("userId", "navn");
+
+      // denne er for svar kolleksjonen. teller hvor mange som har samme nummer i lukeNr som valgtLukeNr OG har riktig svar
+      antallKvalifiserte = await Svar.countDocuments({
+        lukeNr: valgtLukeNr,
+        riktig: true,
+      });
+    }
+
+    // denne bare gjør infoen tilgjengelig hver gang siden refresher.
+    // en for dagens luke, luken som er valgt, vinneren for den luken, nummeret på kandidater, og om vinner var nettopp lagret.
+    res.render("lukeDashboard", {
+      dagensLukeNr,
+      valgtLukeNr,
+      dagensVinner,
+      antallKvalifiserte,
+      vinnerLagret: req.query.vinnerLagret === "true",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Kunne ikke hente dashboardet.");
+  }
 });
+
+// trekker en tilfeldig vinner blant brukere med riktig svar
+app.post(
+  "/admin/vinner/trekk",
+  requireLogin,
+  requireAdmin,
+  async (req, res) => {
+    try {
+      // henter lukeNr fra fetch-requesten og gjør det om til et tall
+      const lukeNr = Number(req.body.lukeNr);
+
+      // sjekker at lukeNr er gyldig
+      if (!Number.isInteger(lukeNr) || lukeNr < 1 || lukeNr > 24) {
+        return res.status(400).json({ error: "Ugyldig luke." });
+      }
+
+      // finner alle svar på denne luken som er vurdert som riktige
+      // populate henter brukeren som står bak hvert svar
+      const svar = await Svar.find({
+        lukeNr: lukeNr,
+        riktig: true,
+      }).populate("userId", "navn");
+
+      // fjerner svar der brukeren ikke lenger finnes
+      const kandidater = svar.filter((item) => item.userId);
+
+      // sjekker at det faktisk finnes noen kandidater
+      if (kandidater.length === 0) {
+        return res.status(404).json({
+          error: "Ingen kvalifiserte svar er registrert for denne luken.",
+        });
+      }
+
+      // velger en tilfeldig kandidat fra listen
+      const tilfeldigIndex = Math.floor(Math.random() * kandidater.length);
+      const valgtKandidat = kandidater[tilfeldigIndex];
+
+      // sender kandidatens informasjon tilbake som JSON
+      res.json({
+        userId: String(valgtKandidat.userId._id),
+        navn: valgtKandidat.userId.navn,
+      });
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ error: "Kunne ikke trekke en vinner." });
+    }
+  },
+);
+
+// lagrer vinneren etter at admin har bekreftet trekningen
+app.post(
+  "/admin/vinner/bekreft",
+  requireLogin,
+  requireAdmin,
+  async (req, res) => {
+    try {
+      const lukeNr = Number(req.body.lukeNr);
+      const userId = req.body.userId;
+
+      // sjekker at lukeNr og userId er gyldige
+      if (
+        !Number.isInteger(lukeNr) ||
+        lukeNr < 1 ||
+        lukeNr > 24 ||
+        !mongoose.Types.ObjectId.isValid(userId)
+      ) {
+        return res.status(400).send("Ugyldig luke eller bruker.");
+      }
+
+      // kontrollerer at brukeren faktisk har svart riktig på denne luken
+      // viktig fordi skjemaets hidden inputs kan endres i nettleseren
+      const kvalifisertSvar = await Svar.findOne({
+        lukeNr: lukeNr,
+        userId: userId,
+        riktig: true,
+      });
+
+      if (!kvalifisertSvar) {
+        return res.status(400).send("Brukeren er ikke kvalifisert.");
+      }
+
+      // sjekker at brukeren fortsatt finnes
+      const bruker = await User.findById(userId);
+
+      if (!bruker) {
+        return res.status(404).send("Fant ikke brukeren.");
+      }
+
+      // oppdaterer vinneren hvis luken allerede har en,
+      // eller oppretter en ny vinner hvis den ikke har det
+      await Vinner.findOneAndUpdate(
+        { lukeNr: lukeNr },
+        {
+          $set: {
+            userId: userId,
+            createdAt: new Date(),
+          },
+        },
+        {
+          upsert: true,
+          new: true,
+          runValidators: true,
+          setDefaultsOnInsert: true,
+        },
+      );
+
+      // sender admin tilbake til dashboardet
+      res.redirect(`/lukeDashboard?lukeNr=${lukeNr}&vinnerLagret=true`);
+    } catch (error) {
+      console.log(error);
+      res.status(500).send("Kunne ikke lagre vinneren.");
+    }
+  },
+);
 
 // henter alle svar og viser dem i admin sin svaroversikt
 app.get("/lukeSvar", requireLogin, requireAdmin, async (req, res) => {
@@ -326,12 +519,13 @@ app.post(
 // hovedside
 
 // viser julekalenderen og finner dagens dato
+
+// viser julekalenderen og finner dagens dato
 app.get("/", async (req, res) => {
   // henter dagens dato
   const dato = new Date();
 
-  // finner hvilken dag det er i norge
-  // bruker Europe/Oslo så det ikke er avhengig av tidssonen til serveren
+  // finner hvilken dag det er i Norge
   const dag = Number(
     new Intl.DateTimeFormat("en-US", {
       timeZone: "Europe/Oslo",
@@ -342,12 +536,22 @@ app.get("/", async (req, res) => {
   // dagens dato bestemmer hvilke luker som er åpne
   const dagensDato = dag;
 
-  // denne kan brukes når du vil teste kalenderen som om det er 24. desember
-  // const dagensDato = 24;
+  // henter alle lagrede vinnere og navnene deres
+  const vinnere = await Vinner.find().populate("userId", "navn");
 
-  // sender datoen til index.ejs så den vet hvilke luker som skal være åpne
+  // lager et objekt der lukeNr brukes som nøkkel og vinnerens navn som verdi
+  const vinnerNavn = {};
+
+  vinnere.forEach((vinner) => {
+    if (vinner.userId) {
+      vinnerNavn[vinner.lukeNr] = vinner.userId.navn;
+    }
+  });
+
+  // sender datoen og vinnernavnene til index.ejs
   res.render("index", {
     dagensDato: dagensDato,
+    vinnerNavn: vinnerNavn,
   });
 });
 
@@ -486,7 +690,7 @@ app.post(
           runValidators: true,
 
           // sørger for at schemaets default-verdier brukes når en ny luke opprettes
-          setDefaultOnInsert: true,
+          setDefaultsOnInsert: true,
         },
       );
 
@@ -502,7 +706,7 @@ app.post(
 // åpne luker og sende inn svar
 
 // viser en luke når noen klikker på den i julekalenderen
-app.get("/luke/:lukeNr", optionalLogin, async (req, res) => {
+app.get("/luke/:lukeNr", async (req, res) => {
   try {
     const lukeNr = Number(req.params.lukeNr);
 
@@ -513,6 +717,11 @@ app.get("/luke/:lukeNr", optionalLogin, async (req, res) => {
 
     // henter informasjonen fra luke-kolleksjonen
     const funnetLuke = await Luke.findOne({ lukeNr: lukeNr });
+
+    // finner vinneren for denne luken og henter navnet fra User
+    const vinner = await Vinner.findOne({
+      lukeNr: lukeNr,
+    }).populate("userId", "navn");
 
     // henter quiz-spørsmålene fra quizzes-kolleksjonen
     const quiz = await quizCollection().findOne({
@@ -541,7 +750,12 @@ app.get("/luke/:lukeNr", optionalLogin, async (req, res) => {
       riktigSvar: funnetLuke?.riktigSvar || quizSporsmal?.correct_answer || "",
 
       media: funnetLuke?.media || quizSporsmal?.video_url || "",
-      mediaType: funnetLuke?.mediaType || "ingen",
+      mediaType:
+        funnetLuke?.mediaType === "video" || funnetLuke?.mediaType === "bilde"
+          ? funnetLuke.mediaType
+          : quizSporsmal?.video_url
+            ? "video"
+            : "ingen",
     };
 
     // hvis luken er deaktivert, skal den ikke vises
@@ -562,6 +776,8 @@ app.get("/luke/:lukeNr", optionalLogin, async (req, res) => {
 
       // gjør innloggingsstatus om til true eller false
       loggedIn: !!req.user,
+
+      vinner: vinner,
     });
   } catch (error) {
     console.log(error);

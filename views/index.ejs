@@ -1,42 +1,75 @@
-<html lang="en">
-<%- include("./partials/head") %>
+<html lang="no">
+<%- include("./partials/head.ejs") %>
 
 <body>
-  <%- include("./partials/nav") %>
-  <h1 id="indexH1">Julekalender</h1>
-  <h2 id="indexH2">Velkommen til Bleiker's digitale Quiz-Julekalender for 2026 ♡ </h2>
-  <p id="indexP">Dette er en digital julekalender hvor hver dag åpner en luke med et spørsmål. Du som en elev kan gi ditt svar, og delta på en trekkning for en premie! Ny sjanse for en premie hver dag, og vinnerer blir trukket tilfeldig. Vinneren blir kontaktet i lunsj dagen etter.</p>
-  <div class="kalender">
-    <!-- for lager en repeating loop
-     let i = 1 sier at den skal starte på 1 istedenfro 0
-     i <= 24 sier at loopen skal vare mellom i(1) og mindre eller lik 24.
-     i++ for at i skal bli en større hver gang loopen går et steg vidre. -->
-    <% for (let i = 1; i <= 24; i++) { %>
+  <%- include("./partials/nav.ejs") %>
 
-    <!-- denne sjekker om nummeret på døren er FØR dagens dato. f eks hvis datoen er 18, da skal dører 1-17 ha klassen fortid -->
-    <% if (i < dagensDato) { %>
+  <section class="calendarIntro">
+    <p class="calendarEyebrow">♡ desember 2026 ♡</p>
+    <h1 id="indexH1">Julekalender</h1>
+    <h2 id="indexH2">Velkommen til Bleiker's digitale Quiz-julekalender!</h2>
 
-    <!-- dette lager en lenke for alle dagene som er i fortiden. siden hver luke har en i som er unik og i rekkefølge, sjekker den det, 
-         og så sender deg til den luken med å putte i inni lenken.  -->
-    <a href="/luke/<%= i %>" class="luke fortid">
-      <%= i %>
-    </a>
+    <p id="indexP">
+      Hver dag åpnes en ny luke med et spørsmål. Du kan sende inn svaret ditt
+      og delta i trekningen av en premie! Det trekkes en ny vinner hver dag,
+      og vinneren blir kontaktet i lunsjen dagen etter.
+    </p>
+  </section>
 
-    <!-- sjekker om i på denne luken er samme tall som dagens dato og hvis den er får den den klassen -->
-    <% } else if (i === dagensDato) {
-    %>
-    <a href="/luke/ <%= i%>" class="luke idag">
-      <%= i %>
-    </a>
-
-    <% } else  { %>
-    <div class="luke framtid">
-      <%= i %>
+  <section class="calendarSection">
+    <div class="calendarHeading">
+      <span>24 dager med jul</span>
+      <span>Velg dagens luke</span>
     </div>
-    <% } %>
 
-    <%  } %>
-  </div>
+    <div class="kalender">
+      <!-- for lager en repeating loop
+           let i = 1 sier at den skal starte på 1 istedenfro 0
+           i <= 24 sier at loopen skal vare mellom i(1) og mindre eller lik 24.
+           i++ for at i skal bli en større hver gang loopen går et steg vidre. -->
+      <% for (let i = 1; i <= 24; i++) { %>
+
+      <!-- denne sjekker om nummeret på døren er FØR dagens dato. f eks hvis datoen er 18, da skal dører 1-17 ha klassen fortid -->
+      <% if (i < dagensDato) { %>
+
+      <!-- dette lager en lenke for alle dagene som er i fortiden -->
+      <a href="/luke/<%= i %>" class="luke fortid">
+        <span class="lukeDekor">✦</span>
+        <span class="lukeNummer"><%= i %></span>
+        <span class="lukeTekst">åpnet</span>
+
+        <!-- hvis det er en vinner med denne indexen skal den vise en span men vinneren. -->
+        <% if (vinnerNavn[i]) { %>
+        <span class="lukeVinner">
+          Vinner: <%= vinnerNavn[i].split(" ")[0] %> </span>
+        <% } %>
+      </a>
+
+      <!-- sjekker om i på denne luken er samme tall som dagens dato -->
+      <% } else if (i === dagensDato) { %>
+
+      <a href="/luke/<%= i %>" class="luke idag">
+        <span class="lukeDekor">✧</span>
+        <span class="lukeNummer"><%= i %></span>
+        <span class="lukeTekst">i dag</span>
+      </a>
+
+      <% } else { %>
+
+      <div class="luke framtid">
+        <span class="lukeDekor">✦</span>
+        <span class="lukeNummer"><%= i %></span>
+        <span class="lukeTekst">snart</span>
+      </div>
+
+      <% } %>
+
+      <% } %>
+    </div>
+
+
+  </section>
+
 </body>
 
 </html>

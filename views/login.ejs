@@ -1,4 +1,4 @@
-<html lang="en">
+<html lang="no">
 <%- include ("./partials/head.ejs") %>
 
 <body>
@@ -10,7 +10,7 @@
       deg hvis du har vunnet en trekkning.
     </h2>
   </div>
-  <div class="main">
+  <section class="section login">
     <form action="/login" method="post">
       <label for="firstName">Fornavn</label>
       <input type="text" name="firstName" id="firstName" />
@@ -23,9 +23,9 @@
     <p>
       Informasjonen du oppgir, brukes kun til å administrere brukerkontoen
       din. Opplysningene dine blir ikke solgt eller delt med uvedkommende, og
-      behandles i samsvar med gjeldende personvernregler.
+      behandles i samsvar med gjeldende personvernregler. Ufine eller uhøfflige navn eller eposter vil ikke telles i trekkning.
     </p>
-  </div>
+  </section>
 
   <%- include ("./partials/footer.ejs") %>
 </body>

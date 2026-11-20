@@ -49,10 +49,9 @@ const lukeSchema = mongoose.Schema({
   //type media som man kan se om det er et bilde eller en video i mongodb og ikke bare en lenke
   mediaType: {
     type: String,
-    enum: ["bilde", "video", "ingen"],
+    enum: ["bilde", "ingen"],
     default: "ingen",
   },
-
 });
 
 const Luke = mongoose.model("Luke", lukeSchema);

@@ -1,34 +1,203 @@
-<html lang="en">
+<html lang="no">
 <%- include("./partials/head.ejs") %>
 
 <body>
   <%- include("./partials/nav.ejs") %>
 
-  <div>
-    <h1>
-      oversikt
-    </h1>
-  </div>
-  <div>
+  <section class="dashboardIntro">
+    <span class="sectionLabel">ADMINISTRASJON</span>
+    <h1>Dashboard</h1>
+    <p>Velkommen til kontrollrommet for julekalenderen.</p>
+  </section>
 
-    <h1>Rediger julekalender</h1>
+  <section class="dashboardSection">
+    <div class="dashboardHeading">
+      <div>
+        <span class="sectionLabel">INNHOLD</span>
+        <h2>Rediger julekalender</h2>
+      </div>
+      <span class="dashboardCount">24 luker</span>
+    </div>
 
-    <% for (let i = 1; i <= 24; i++) { %>
-    <a href="/admin/luke/<%= i %>">
-      Rediger luke <%= i %>
-    </a>
+    <div class="editorGrid">
+      <%
+      // lager 24 lenker automatisk ved hjelp av en for løkke
+      for (let i = 1; i <= 24; i++) {
+      %>
+
+      <a href="/admin/luke/<%= i %>" class="editorDoor">
+        <span>LUKE</span>
+        <strong><%= i %></strong>
+        <span>Rediger →</span>
+      </a>
+
+      <% } %>
+    </div>
+  </section>
+
+  <section class="section winnerPanel">
+
+    <span class="sectionLabel">DAGENS VINNER</span>
+    <h2>Velg dagens vinner</h2>
+
+    <p>
+      Trekk en tilfeldig vinner blant brukerne som har svart riktig på dagens luke
+    </p>
+
+    <% if (vinnerLagret) { %>
+    <p class="successMessage">Vinneren er lagret!</p>
     <% } %>
-  </div>
-  <div>
-    <h1>deltakere</h1>
-  </div>
-  <div>
-    <h1>svar</h1>
-  </div>
 
-  <div>
-    <h1>vinnere</h1>
-  </div>
+    <!-- velger hvilken luke administratoren skal trekke en vinner for -->
+    <form method="GET" action="/lukeDashboard">
+
+      <label for="vinnerLukeNr">Velg luke</label>
+
+      <select id="vinnerLukeNr" name="lukeNr" onchange="this.form.submit()">
+        <option value="">Velg luke</option>
+
+        <%
+        // lager et valg for hver av de 24 lukene
+        for (let i = 1; i <= 24; i++) {
+        %>
+
+        <option value="<%= i %>" <%= Number(valgtLukeNr) === i ? "selected" : "" %>>
+          Luke <%= i %>
+        </option>
+
+        <% } %>
+      </select>
+    </form>
+
+    <% if (valgtLukeNr) { %>
+
+    <h3>Luke <%= valgtLukeNr %></h3>
+
+    <p>
+      Antall kvalifiserte svar:
+      <strong><%= antallKvalifiserte %></strong>
+    </p>
+
+    <% if (dagensVinner && dagensVinner.userId) { %>
+
+    <div class="vinnerKandidate">
+      <span class="sectionLabel">NÅVÆRENDE VINNER</span>
+      <h3><%= dagensVinner.userId.navn %></h3>
+
+      <p>
+        Denne personen er allerede lagret som vinner
+        Du kan trekke en ny kandidat og erstatte vinneren hvis nødvendig
+      </p>
+    </div>
+
+    <% } %>
+
+    <div id="vinnerResultat" aria-live="polite">
+      Trykk på knappen for å trekke en tilfeldig vinner
+    </div>
+    <div class="buttonWrap">
+      <button type="button" id="trekkVinnerKnapp">
+        Trekk tilfeldig vinner
+      </button>
+
+      <form method="POST" action="/admin/vinner/bekreft" id="bekreftVinnerForm">
+
+        <input type="hidden" name="lukeNr" value="<%= valgtLukeNr %>">
+        <input type="hidden" name="userId" id="valgtVinnerId">
+
+        <button type="submit" id="bekreftVinnerKnapp" disabled>
+          Velg denne vinneren
+        </button>
+      </form>
+    </div>
+
+    <% } else { %>
+
+    <p>Velg en luke fra listen for å trekke en vinner</p>
+
+    <% } %>
+
+  </section>
+
+  <section class="dashboardQuickLinks">
+
+    <a href="/lukeSvar" class="dashboardLink">
+      <span class="sectionLabel">SVAROVERSIKT</span>
+      <h2>Se elevsvar</h2>
+      <p>Se, filtrer og vurder svarene som er sendt inn</p>
+      <span class="dashboardArrow">Gå til svarrapport →</span>
+    </a>
+
+    <a href="/brukere" class="dashboardLink">
+      <span class="sectionLabel">BRUKERE</span>
+      <h2>Se alle brukere</h2>
+      <p>Få oversikt over registrerte elever og administratorer</p>
+      <span class="dashboardArrow">Gå til brukeroversikt →</span>
+    </a>
+
+  </section>
+
+  // henter knappene og elementene vi skal oppdatere
+  <script>
+    const trekkKnapp = document.getElementById("trekkVinnerKnapp");
+    const bekreftKnapp = document.getElementById("bekreftVinnerKnapp");
+    const resultat = document.getElementById("vinnerResultat");
+    const valgtVinnerId = document.getElementById("valgtVinnerId");
+    const bekreftVinnerForm = document.getElementById("bekreftVinnerForm");
+
+    // sjekker at knappen finnes før vi legger til en hendelse
+    if (trekkKnapp) {
+
+      trekkKnapp.addEventListener("click", async () => {
+
+        const lukeNr = bekreftVinnerForm.querySelector(
+          'input[name="lukeNr"]'
+        ).value;
+
+        trekkKnapp.disabled = true;
+        bekreftKnapp.disabled = true;
+
+        valgtVinnerId.value = "";
+        resultat.textContent = "Trekker en tilfeldig vinner...";
+
+        try {
+
+          // sender en forespørsel til app.js for å trekke en tilfeldig kandidat
+          const response = await fetch("/admin/vinner/trekk", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams({
+              lukeNr: lukeNr,
+            }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.error || "Kunne ikke trekke en vinner");
+          }
+
+          resultat.textContent = "Tilfeldig trukket: " + data.navn;
+          valgtVinnerId.value = data.userId;
+
+          bekreftKnapp.disabled = false;
+
+        } catch (error) {
+
+          resultat.textContent = error.message;
+
+        } finally {
+
+          // aktiverer trekknappen igjen så administratoren kan trekke på nytt
+          trekkKnapp.disabled = false;
+
+        }
+      });
+    }
+  </script>
+
 </body>
 
 </html>
