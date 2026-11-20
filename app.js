@@ -101,16 +101,6 @@ const requireAdmin = (req, res, next) => {
 };
 
 //
-// disse to er for logout knapp, login knapp, eller navn i nav bar
-// sjekker hvem som er logget inn på alle sider for å displaye logout eller bruker hvis man ikke er det
-app.use(optionalLogin);
-
-// gjør brukerinfo tilgjengelig i alle ejs filene for at partials nav skal fungere
-app.use((req, res, next) => {
-  res.locals.currentUser = req.user;
-  next();
-});
-
 //
 //
 //
@@ -181,7 +171,7 @@ app.post("/login", async (req, res) => {
       maxAge: 30 * 24 * 60 * 60 * 1000,
     });
 
-    // sender deg til index, duh
+    //sender deg til index, duh
     res.redirect("/");
   } catch (error) {
     console.log(error);
@@ -189,6 +179,7 @@ app.post("/login", async (req, res) => {
   }
 });
 
+//
 //
 //
 //
@@ -220,13 +211,9 @@ app.get("/lukeSvar", requireLogin, requireAdmin, async (req, res) => {
       filter.riktig = null;
     }
 
-    // filtrerer etter luke hvis admin har valgt en bestemt luke
+    // filtrerer etter luke hvis admin har valgt en bestemt luke. man kan bruke begge to samtidig! yay!
     if (req.query.lukeNr) {
-      const valgtLuke = Number(req.query.lukeNr);
-
-      if (Number.isInteger(valgtLuke) && valgtLuke >= 1 && valgtLuke <= 24) {
-        filter.lukeNr = valgtLuke;
-      }
+      filter.lukeNr = Number(req.query.lukeNr);
     }
 
     // henter svarene fra mongodb, nyeste først
@@ -239,13 +226,20 @@ app.get("/lukeSvar", requireLogin, requireAdmin, async (req, res) => {
     const quiz = await quizCollection().findOne({
       _id: "christmas-quiz",
     });
-
-    // legger riktig svar til hvert svar som skal vises i oversikten.
+    //
+    //
+    //
+    //
+    // legger riktig svar  til hvert svar som skal vises i oversikten.
+    // svar.map går gjennom arrayen "svar", lager en ny array med resultatene, s er et variabel navn for alle svarene induviduelt.
+    // det er fordi at den skal vise både det eleven svarer, og det som er riktig svar.
+    // kan ikke ta alt fra elevsvar db'en, fordi der skal det ikke vises hva som er det riktige svaret, det er bare i lukes and quizzes kolleksjonene
     const svarMedRiktigSvar = svar.map((s) => {
       // finner luken som eleven svarte på
       const luke = luker.find((l) => l.lukeNr === s.lukeNr);
 
       // finner quiz spørsmålet med samme lukeNr
+      //?. er bare sånn hvis infoen den leter etter ikke er der så går den vidre, bare gir en "undefined" istedefor og crashe. som et safety net
       const quizSporsmal = quiz?.questions?.find((q) => q.id === s.lukeNr);
 
       // henter riktig svar fra enten luke kolleksjonen eller quiz
@@ -254,11 +248,12 @@ app.get("/lukeSvar", requireLogin, requireAdmin, async (req, res) => {
         quizSporsmal?.correct_answer?.trim() ||
         "ikke gitt";
 
-      // lager et nytt objekt med informasjonen fra svaret og riktig svar
+      // lager et nytt objekt med informasjonen fra svaret og riktig svar,sender det til luke svar siden for og vise elev svar OG riktig svar
       return {
         // s er ett enkelt svar fra db, men som et mongoose doc
         // toObject gjør mongoose doc til vanlig js objekt
-        // ... er spread operator som kopierer alle delene fra objektet
+        // ... er spread operator som kopierer alle delene fra det nye objektet inn i ENDA et nytt objekt
+        // sånn vi kan beholde infoen fra svar, men også ha et nytt objekt vi kan legge til det riktige svaret ved siden av s (elevet sitt svar)
         ...s.toObject(),
         riktigSvar: riktigSvar,
       };
@@ -275,9 +270,13 @@ app.get("/lukeSvar", requireLogin, requireAdmin, async (req, res) => {
     res.status(500).send("Kunne ikke hente svar.");
   }
 });
-
 //
-// lar admin markere et svar som riktig eller feil
+//
+//
+//
+//
+// lar admin markere et svar som riktig eller feil, og filtrere svar
+//
 app.post(
   "/lukeSvar/:svarId/vurder",
   requireLogin,
@@ -286,35 +285,31 @@ app.post(
     try {
       const vurdering = req.body.riktig;
 
-      // sjekker at vurderingen faktisk er enten true eller false
+      // sjekker at vurderingen faktisk er enten true eller false sånn man ikke kan f eks sette null som vurdering. det er bare for de som IKKE er vurderte
       if (vurdering !== "true" && vurdering !== "false") {
         return res.status(400).send("Ugyldig vurdering.");
       }
 
-      // finner svaret med denne id'en og oppdaterer vurderingen
-      const oppdatertSvar = await Svar.findByIdAndUpdate(
-        req.params.svarId,
-        {
-          riktig: vurdering === "true",
-        },
-        { new: true },
-      );
-
-      if (!oppdatertSvar) {
-        return res.status(404).send("Fant ikke svaret.");
-      }
+      // finner svaret med denne id'en og oppdaterer vurderingen til at den er vurdert
+      await Svar.findByIdAndUpdate(req.params.svarId, {
+        riktig: vurdering === "true",
+      });
 
       // henter filtrene som admin brukte før vurderingen
+      // så man kan beholde samme filter når siden lastes inn igjen
       const lukeNr = req.body.lukeNr || "";
       const status = req.body.status || "";
 
       // gjør filtrene om til en query string som kan brukes i urlen
+      //query her er bare variabel navn, men bruker det fordi den skal lage en query string
+      //
       const query = new URLSearchParams({
         lukeNr: lukeNr,
         status: status,
       }).toString();
 
-      // sender admin tilbake til samme svaroversikt
+      // sender admin tilbake til samme svar
+      // id-en etter # gjør at nettleseren kan scrolle til riktig svar
       res.redirect(`/lukeSvar?${query}`);
     } catch (error) {
       console.log(error);
@@ -322,19 +317,6 @@ app.post(
     }
   },
 );
-
-//
-// logger ut brukeren ved å fjerne login cookien
-app.post("/logout", (req, res) => {
-  res.clearCookie("token", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-  });
-
-  res.redirect("/");
-});
 
 //
 //
@@ -369,11 +351,6 @@ app.get("/", async (req, res) => {
   });
 });
 
-//
-//
-//
-//
-//
 // redigere luker
 
 // henter en bestemt luke fra dashboardet og viser den i editoren
@@ -442,7 +419,10 @@ app.post(
         return res.status(400).send("Ugyldig luke");
       }
 
-      // henter quiz spørsmålene fra quizzes kolleksjonen
+      // henter informasjonen som allerede finnes om denne luken
+      const eksisterendeLuke = await Luke.findOne({ lukeNr: lukeNr });
+
+      // henter quiz-spørsmålene fra quizzes-kolleksjonen
       const quiz = await quizCollection().findOne({
         _id: "christmas-quiz",
       });
@@ -451,17 +431,6 @@ app.post(
       const quizSporsmal = quiz?.questions?.find(
         (question) => question.id === lukeNr,
       );
-
-      // gjør alternativene fra tekstfeltet om til en array
-      const alternativer = Array.isArray(req.body.alternativer)
-        ? req.body.alternativer
-        : typeof req.body.alternativer === "string"
-          ? req.body.alternativer.split(/\r?\n/)
-          : [];
-
-      const rensedeAlternativer = alternativer
-        .map((option) => option.trim())
-        .filter((option) => option.length > 0);
 
       // oppdaterer luken i mongodb
       await Luke.findOneAndUpdate(
@@ -472,20 +441,40 @@ app.post(
           $set: {
             aktiv: req.body.aktiv === "true",
 
-            // bruker verdiene fra skjemaet direkte, også hvis feltet er tomt
-            tittel: (req.body.tittel || "").trim(),
+            tittel: req.body.tittel || eksisterendeLuke?.tittel || "",
 
-            sporsmal: (req.body.sporsmal || "").trim(),
+            sporsmal:
+              req.body.sporsmal ||
+              eksisterendeLuke?.sporsmal ||
+              quizSporsmal?.question ||
+              "",
 
-            svarType: req.body.svarType || "open",
+            svarType: req.body.svarType || eksisterendeLuke?.svarType || "open",
 
-            alternativer: rensedeAlternativer,
+            // deler alternativene på linjeskift så hvert alternativ blir en egen verdi i arrayet
+            alternativer: req.body.alternativer
+              ? req.body.alternativer
+                  .split(/\r?\n/)
+                  .map((option) => option.trim())
+                  .filter((option) => option.length > 0)
+              : eksisterendeLuke?.alternativer?.length
+                ? eksisterendeLuke.alternativer
+                : quizSporsmal?.options || [],
 
-            riktigSvar: (req.body.riktigSvar || "").trim(),
+            riktigSvar:
+              req.body.riktigSvar ||
+              eksisterendeLuke?.riktigSvar ||
+              quizSporsmal?.correct_answer ||
+              "",
 
-            media: (req.body.media || "").trim(),
+            media:
+              req.body.media ||
+              eksisterendeLuke?.media ||
+              quizSporsmal?.video_url ||
+              "",
 
-            mediaType: req.body.mediaType || "ingen",
+            mediaType:
+              req.body.mediaType || eksisterendeLuke?.mediaType || "ingen",
           },
         },
 
@@ -510,15 +499,10 @@ app.post(
   },
 );
 
-//
-//
-//
-//
-//
 // åpne luker og sende inn svar
 
 // viser en luke når noen klikker på den i julekalenderen
-app.get("/luke/:lukeNr", async (req, res) => {
+app.get("/luke/:lukeNr", optionalLogin, async (req, res) => {
   try {
     const lukeNr = Number(req.params.lukeNr);
 
@@ -616,11 +600,6 @@ app.post("/luke/:lukeNr/svar", requireLogin, async (req, res) => {
       (question) => question.id === lukeNr,
     );
 
-    // sjekker om luken er deaktivert
-    if (luke && !luke.aktiv) {
-      return res.status(404).send("Denne luken finnes ikke");
-    }
-
     // finner riktig svar fra enten luke-kolleksjonen eller quiz
     const riktigSvar =
       luke?.riktigSvar?.trim() || quizSporsmal?.correct_answer?.trim() || "";
@@ -629,13 +608,15 @@ app.post("/luke/:lukeNr/svar", requireLogin, async (req, res) => {
     let riktig = null;
 
     // hvis det er flervalg, kan vi sammenligne svaret med riktig svar automatisk
-    if (
-      (luke?.svarType || "open") === "multiple_choice" ||
-      (!luke && quizSporsmal?.options?.length)
-    ) {
+    if (luke?.svarType === "multiple_choice") {
       riktig =
         svar.trim().toLocaleLowerCase("no-NO") ===
         riktigSvar.toLocaleLowerCase("no-NO");
+    }
+
+    // sjekker om luken er deaktivert
+    if (luke && !luke.aktiv) {
+      return res.status(404).send("Denne luken finnes ikke");
     }
 
     // sjekker mongodb for å se om denne brukeren allerede har svart på denne luken
@@ -665,7 +646,6 @@ app.post("/luke/:lukeNr/svar", requireLogin, async (req, res) => {
   }
 });
 
-//
 // starter serveren
 
 // kobler nettsiden til en lokal port, som kan endres i .env
