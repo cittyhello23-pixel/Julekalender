@@ -703,6 +703,38 @@ app.post(
   },
 );
 
+app.get("/brukere", requireLogin, requireAdmin, async (req, res) => {
+  try {
+    // henter alle brukerne og svarene deres
+    const brukere = await User.find().sort({ navn: 1 });
+    const svar = await Svar.find();
+
+    // lager en oversikt over hver bruker
+    const brukerOversikt = brukere.map((bruker) => {
+      // finner alle svarene som tilhører denne brukeren
+      const brukerSvar = svar.filter(
+        (s) => s.userId && s.userId.toString() === bruker._id.toString(),
+      );
+
+      // teller hvor mange av svarene som er riktige
+      const riktigeSvar = brukerSvar.filter((s) => s.riktig === true).length;
+
+      return {
+        navn: bruker.navn,
+        email: bruker.email,
+        uid: bruker._id,
+        antallSvar: brukerSvar.length,
+        riktigeSvar: riktigeSvar,
+      };
+    });
+
+    res.render("brukere", { brukere: brukerOversikt });
+  } catch (error) {
+    console.error("Feil ved henting av brukere:", error);
+    res.status(500).send("Kunne ikke hente brukerne");
+  }
+});
+
 // åpne luker og sende inn svar
 
 // viser en luke når noen klikker på den i julekalenderen

@@ -139,6 +139,10 @@ nav a {
   margin: 20px 0;
   border-top: 1px solid var(--night);
 }
+
+.answerContent p {
+  overflow-wrap: anywhere;
+}
 #vinnerResultat {
   font-size: 1.3rem;
   text-align: center;
@@ -535,6 +539,9 @@ select:focus-visible {
 .answerlabel {
   font-size: 1.2rem;
 }
+.answerLuke {
+  font-size: 2rem;
+}
 
 .markCorrect {
   background: var(--mint);
@@ -590,7 +597,21 @@ select:focus-visible {
     grid-template-columns: 1fr;
   }
 }
+.answerList {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
 
+#reportTop {
+  display: flex;
+  justify-content: center;
+}
+#reportHeading {
+  display: flex;
+  justify-content: center;
+}
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

@@ -1,0 +1,82 @@
+<html lang="no">
+<%- include("./partials/head.ejs") %>
+
+<body>
+  <%- include("./partials/nav.ejs") %>
+
+  <section class="reportIntro">
+    <span class="sectionLabel">ADMINISTRASJON</span>
+    <h1>Brukere</h1>
+    <p>Oversikt over registrerte elever og deres aktivitet.</p>
+  </section>
+
+  <section class="section reportSection">
+
+    <div id="reportTop">
+      <div class="totalAnswers">
+        <span><%= brukere.length %> Brukere registrert</span>
+      </div>
+    </div>
+
+    <div id="reportHeading">
+      <h2>Registrerte brukere</h2>
+    </div>
+
+    <% if (brukere.length === 0) { %>
+
+    <div class="emptyReport">
+      <span>✧</span>
+      <p>Ingen brukere er registrert enda.</p>
+    </div>
+
+    <% } else { %>
+
+    <div class="answerList">
+      <% brukere.forEach(function(bruker) { %>
+
+      <article class="answerCard">
+
+        <div class="answerTop">
+          <span class="answerLuke"><%= bruker.navn %></span>
+
+          <span class="answerStatus statusPending">
+            <%= bruker.antallSvar %> svar
+          </span>
+        </div>
+
+        <div class="answerContent">
+
+          <div class="answerDiv">
+            <span class="answerLabel">E-POST</span>
+            <p><%= bruker.email %></p>
+          </div>
+
+          <div>
+            <span class="answerLabel">BRUKER-ID</span>
+            <p><%= bruker.uid %></p>
+          </div>
+
+        </div>
+
+        <div class="answerMeta">
+          <span>
+            Innsendte svar: <%= bruker.antallSvar %>
+          </span>
+
+          <span>
+            Riktige svar: <%= bruker.riktigeSvar %>
+          </span>
+        </div>
+
+      </article>
+
+      <% }); %>
+    </div>
+
+    <% } %>
+
+  </section>
+
+</body>
+
+</html>
