@@ -200,7 +200,7 @@ async function seed() {
       await Luke.findOneAndUpdate(
         { lukeNr: question.id },
         {
-          $set: {
+          $setOnInsert: {
             sporsmal: question.question,
             svarType: svarType,
             alternativer: question.options || [],
