@@ -1,11 +1,72 @@
 <nav>
-  <ul>
+
+  <ul class="navLinks">
     <li><a href="/">Kalender</a></li>
-    <li><a href="/login">Logg inn</a></li>
+
+    <!--
+      sjekker først om det finnes en innlogget bruker
+      så sjekker den om brukerens rolle er admin
+      bare administratorer tilgang til disse lenkene i nav
+    -->
+    <% if (currentUser && currentUser.role === "admin") { %>
+
+    <!-- sender admin til oversikten -->
     <li><a href="/lukeDashboard">Admin dashboard</a></li>
+
+    <!-- sender admin til siden der innsendte svar er -->
     <li><a href="/lukeSvar">Se svarrapport</a></li>
+
+    <% } %>
+  </ul>
+
+
+  <ul class="navUser">
+
+    <!--
+      sjekker om currentUser inneholder en innlogget bruker
+      hvis currentUser finnes, vises innloggingsrelaterte elementer
+    -->
+    <% if (currentUser) { %>
+
+    <li>
+      <!--
+          skjemaet sender en post forespørsel til /logout når knappen trykkes
+        -->
+      <form action="/logout" method="post">
+
+        <!-- knappen sender inn skjemaet og starter utloggingen -->
+        <button type="submit">Logg ut</button>
+      </form>
+    </li>
+
+    <!-- viser en hilsen til den innloggede eleven -->
+    <li class="navHei">
+      Hei, <%= currentUser.navn.split(" ")[0] %>!
+    </li>
+
+    <!--
+      hvis currentUser ikke finnes, betyr det at ingen er logget inn,
+       viser i stedet en lenke til login
+    -->
+    <% } else { %>
+
+    <!-- sender brukeren til login -->
+    <li><a href="/login" id="navLoginLink">Logg inn</a></li>
+
+    <!-- viser en velkommen for elever som ikke er logget inn -->
+    <li class="navWelcome">Velkommen til Bleiker-julekalenderen!</li>
+
+    <!-- avslutter if/else-setningen som sjekker om brukeren er logget inn -->
+    <% } %>
   </ul>
 </nav>
+
+<!--
+  bakgrunnsvideoen
+-->
 <video class="bgVid" autoplay muted loop playsinline aria-hidden="true">
+
+  <!-- henter selve videofilen fra public/video-mappen -->
   <source src="/video/snow.mp4" type="video/mp4" />
+
 </video>
