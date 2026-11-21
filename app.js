@@ -122,6 +122,10 @@ app.get("/login", (req, res) => {
   res.render("login");
 });
 
+app.get("/hjelp", (req, res) => {
+  res.render("hjelp");
+});
+
 // tar imot informasjonen fra login form
 app.post("/login", async (req, res) => {
   try {
