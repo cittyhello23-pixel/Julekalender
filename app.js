@@ -750,7 +750,17 @@ app.get("/luke/:lukeNr", async (req, res) => {
     if (!Number.isInteger(lukeNr) || lukeNr < 1 || lukeNr > 24) {
       return res.status(400).send("Ugyldig luke");
     }
+    // sjekker om luken har kommet ennå
+    const dagensDato = Number(
+      new Intl.DateTimeFormat("en-US", {
+        timeZone: "Europe/Oslo",
+        day: "numeric",
+      }).format(new Date()),
+    );
 
+    if (lukeNr > dagensDato) {
+      return res.status(403).send("Denne luken er ikke åpnet ennå.");
+    }
     // henter informasjonen fra luke-kolleksjonen
     const funnetLuke = await Luke.findOne({ lukeNr: lukeNr });
 
