@@ -554,10 +554,27 @@ select:focus-visible {
   body {
     margin: 15px;
   }
+
   .navbar {
     flex-wrap: wrap;
     justify-content: center;
     gap: 12px;
+  }
+  .helpPage .calendarHeading {
+    flex-direction: row;
+    text-align: left;
+  }
+  .helpPage h1 {
+    font-size: 2.5rem;
+  }
+  #reportTop {
+    flex-direction: column;
+  }
+  .answerDiv {
+    border-right: none;
+  }
+  .helpPage .section p {
+    margin-bottom: 20px;
   }
   nav ul {
     flex-wrap: wrap;
