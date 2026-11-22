@@ -248,7 +248,7 @@ Passordinnlogging er fortsatt aktivert i ssh oppsettet, så serveren bruker ikke
 
 Notat, jeg failet å gi monica et passord. Oops. Hun kan ikke bruke sudo.
 
-#### Brukerveiledning
+### Brukerveiledning
 
 Her finner du litt hjelp til hvordan julekalenderen fungerer. Hvis du lurer på noe, kan du kanskje finne svaret her!
 
