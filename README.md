@@ -202,15 +202,51 @@ Dersom man har endret serverkoden, må serveren startes på nytt for at endringe
 
 ---
 
-## Utrulling på Linux server
-
 ### VM oppsett
 
----
+Jeg satte opp en egen vm gjennom skolens proxmox server greie. For å få tilgang til systemet brukte jeg globalprotect og skolens portal. Vm'en ble opprettet med ubuntu, den fikk navnet Julekalender og vm id 1405 (fordi mitt pool er 14 og det var vm nr 5). Jeg valgte 5 cpu kjerner og 4096 mb ram (geir sier hva som helst over 4k, monica sier 4096, denne følger begge) som vi fikk beskjed om.
 
-## Brukerveiledning
+![VM specs](public/img/VMconfirm.png)
 
-### Vanlig bruker (i hjelp siden på appen)
+Serveren har ip adressen 10.12.14.15 med subnetmask /24 og gateway 10.12.14.1. Den bruker også domenet ikt-fag.no. Jeg satte opp ssh slik at jeg kunne koble til serveren fra min egen pc, og konfigurerte nøkkelbasert innlogging.
+
+Etter at ubuntu server var satt opp, installerte jeg node.js, npm, mongodb, mongosh, nginx og pm2. Disse brukes til å kjøre applikasjonen, håndtere databasen og holde nettsiden i gang på serveren.
+
+Prosjektet ligger i `/var/www/julekalender`. Der installerte jeg dependencies og satte opp en `.env` fil. Denne inneholder tilkoblingen til mongodb og nøkkelen til JWT.
+
+Jeg brukte pm2 til å starte applikasjonen i bakgrunnen. Det gjør at nettsiden kan fortsette å kjøre selv om jeg lukker ssh tilkoblingen. Jeg kan også kontrollere status, se logger og starte applikasjonen på nytt med pm2.
+
+Nginx er installert, men er foreløpig ikke ferdig konfigurert som reverse proxy. MongoDB fungerer på serveren, men automatisk oppstart etter omstart er ikke satt opp.
+
+Jeg har også tenkt på hvilke brukere som trenger tilgang til serveren, og at de ikke bør ha flere rettigheter enn nødvendig. Dette er viktig fordi serveren inneholder både applikasjonen og informasjon fra brukerne.
+
+### Brukere, grupper og ssh
+
+Jeg satte opp ssh slik at jeg kan koble til VMen fra min egen pc uten å måtte bruke konsollen i proxmox hver gang. Jeg bruker brukeren megatron, og kobler til serveren med ip adressen 10.12.14.15.
+
+Innloggingen bruker ssh nøkler. Det fungerer ved at man lager et nøkkelpar på sin egen pc, hvor den private nøkkelen blir værende på pcen, mens den offentlige nøkkelen legges på serveren. Serveren bruker den offentlige nøkkelen til å kontrollere at brukeren har riktig privat nøkkel når de logger inn.
+
+Jeg opprettet også en egen bruker til læreren, med brukernavnet monica. Dette gjør at læreren kan logge inn med sin egen bruker istedenfor å bruke min. Jeg la den offentlige ssh nøkkelen hennes inn i `/home/monica/.ssh/authorized_keys`. På den måten kan hun koble seg til med sin egen private nøkkel. Nøkkelen som ble lagt inn var en ed25519 nøkkel.
+
+Både megatron og monica er lagt til i gruppene users og sudo. Dette betyr at begge har vanlig brukertilgang, men også mulighet til å bruke sudo for å utføre oppgaver som krever administratorrettigheter. Jeg valgte å gi læreren sudo tilgang fordi hun skal kunne administrere og gjøre endringer på VMen dersom det trengs. Det betyr også at begge brukerne har ganske omfattende tilgang, og at dette må tas med i vurderingen av sikkerheten.
+
+Jeg satte også opp filrettighetene til lærerens ssh filer. Hjemmemappen hennes har rettighetene 750, `.ssh` mappen har 700 og `authorized_keys` filen har 600. Filene eies av monica. Dette gjør at andre brukere ikke kan lese eller endre ssh nøkkelen hennes.
+
+For å koble til serveren bruker jeg:
+
+```bash
+ssh megatron@10.12.14.15
+```
+
+Læreren bruker:
+
+```bash
+ssh monica@10.12.14.15
+```
+
+Passordinnlogging er fortsatt aktivert i ssh oppsettet, så serveren bruker ikke kun nøkkelpålogging enda. Lærerens nøkkel er lagt inn, men innlogging fra hennes egen pc er ikke testet.
+
+Notat, jeg failet å gi monica et passord. Oops. Hun kan ikke bruke sudo.
 
 #### Brukerveiledning
 
