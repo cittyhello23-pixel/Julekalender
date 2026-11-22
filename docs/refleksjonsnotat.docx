@@ -1,0 +1,46 @@
+refleksjonsnotat
+arbeidet med prosjektet
+Jeg synes egentlig dette har vært en veldig bra oppgave. Den har vært ganske omfattende, og det har gått utrolig mye tid til å utvikle, teste og forbedre løsningen. Dette er uten tvil et av de største prosjektene jeg har jobbet med så langt, og jeg føler at både kunnskapen min og forståelsen min av teknologiene har økt UTROLIG mye.
+Jeg har jobbet med både frontend, backend, database, design og drift. Det har vært mange funksjoner jeg aldri har prøvd å lage tidligere, og det har vært ganske mye prøving og feiling underveis. Jeg føler likevel at jeg har fått en mye bedre forståelse av hvordan en større webapplikasjon faktisk bygges opp, og hvordan de forskjellige delene må fungere sammen.
+prosessen
+Det vanskeligste har egentlig vært å holde oversikt over alt. Hver gang jeg har ferdigstilt en funksjon, har det dukket opp flere ting som må forbedres, testes eller utvikles videre. Jeg har brukt GitHub Projects til å dele opp arbeidet i mindre oppgaver, noe som var spesielt nyttig i starten når jeg var usikker på hva jeg burde gjøre videre.
+Jeg har også brukt branches og pull requests, men ikke alltid så mye som jeg burde. Jeg kunne bli så opptatt av å få en funksjon ferdig at jeg glemte å lage commits eller oppdatere prosjektoversikten. Dette er noe jeg ville gjort bedre neste gang.
+Jeg har brukt veldig mye tid på prosjektet, både på skolen og hjemme (40 timer cirka, ja, på en uke. Jeg gikk GAL). Flere av arbeidsdagene ble ganske lange, og jeg fortsatte ofte med utviklingen etter at jeg egentlig hadde avsluttet for dagen. Det har vært en ganske intens arbeidsperiode, men det har også vært motiverende å se hvor mye jeg faktisk har fått til. Følte meg veldig motivert av å bli ferdig, i hvert fall 95% cirka (jeg mangler noen punkt), og det at hvis jeg skal få en jobb ,å jeg bli vandt til strenge deadlines. Plus, jeg likte oppgaven! Har fått et nytt syn på utvikling gjennom dette.
+
+hva jeg har lært
+Jeg føler spesielt at forståelsen min av javascript, node.js, express og ejs har økt utrolig mye. Tidligere var det vanskeligere å forstå hvordan informasjon faktisk beveger seg mellom nettleseren, serveren og databasen. Nå forstår jeg bedre hvordan en rute kan hente informasjon fra mongoDB, sende den videre til en ejs side og vise riktig innhold til brukeren.
+Jeg har også lært mye om mongoose, modeller og schemas. Det tok litt tid å forstå forskjellen mellom modell og schema, og hvorfor det er nyttig å dele informasjonen inn i forskjellige modeller.
+Et annet område jeg har lært mye om er autentisering og tilgangskontroll. Jeg har jobbet med jwt, cookies og middleware, og forstår nå bedre forskjellen mellom å identifisere en bruker og å bestemme hvilke funksjoner brukeren skal ha tilgang til.
+Jeg har også fått mer erfaring med hvordan man bygger funksjoner som faktisk bruker informasjon fra databasen, i stedet for å skrive alt direkte inn i html.
+
+utfordringer og problemløsning
+En av de største utfordringene var å få de forskjellige delene av applikasjonen til å fungere sammen. Jeg støtte blant annet på problemer med ruter, databaseoperasjoner og informasjon som ble sendt mellom skjemaer og serveren. req.body, req.params og req.user var ting jeg måtte bruke tid på å forstå ordentlig.
+Et annet eksempel var datostyringen. Det var ikke nok å bare skjule framtidige luker på forsiden, siden brukeren fortsatt kunne forsøke å åpne dem direkte gjennom url. Derfor måtte jeg også kontrollere datoen på serversiden. Dette gjorde at jeg fikk en bedre forståelse av hvorfor viktige kontroller ikke bare kan gjøres i frontend.
+Jeg hadde også utfordringer med seed.js og redigering av luker. Jeg lagde redigeringsfunksjonen etter at seed allerede var på plass, og måtte derfor bruke ekstra tid på å få disse delene til å fungere sammen. Det var ganske frustrerende, men også lærerikt.
+
+vm, ssh og linux
+Oppsettet av vm'en var en av delene jeg slet mest med. Det var mye nytt å lære om nettverk, ssh, brukere og rettigheter i linux. Dette var faktisk min femte vm, men jeg hadde fortsatt problemer med flere deler av oppsettet.
+Lukas hjalp meg med det første oppsettet, og etterpå jobbet jeg videre med å forstå hvordan jeg kunne koble meg til fra min egen pc, bruke ssh nøkler og opprette en egen bruker til læreren.
+Jeg har blant annet satt opp brukerne megatron og monica, lagt inn ssh nøkler og konfigurert filrettigheter. Jeg har også installert nødvendig programvare som node.js, npm, mongodb, nginx og pm2.
+Jeg synes denne delen var ganske krevende fordi en liten feil i nettverk eller tilgang kunne gjøre at andre deler heller ikke fungerte. Jeg føler likevel at jeg har fått mye bedre forståelse av hvordan en linux server settes opp og administreres.
+Det gjenstår fortsatt noen deler av utrullingen, blant annet ferdig konfigurasjon av nginx og automatisk oppstart av mongodb. Passordinnlogging er også fortsatt aktivert, så ssh er ikke begrenset til kun nøkkelpålogging enda, men det er noe jeg lar ligge for nå.
+
+bruk av ai
+Jeg har brukt chatgpt ganske omfattende gjennom prosjektet. Det har vært et hjelpemiddel både når jeg har stått fast, når jeg har trengt forklaringer på kode og når jeg har forsøkt å forstå hvordan forskjellige funksjoner henger sammen.
+Jeg har spesielt brukt det til å gå gjennom kode steg for steg, forstå feilmeldinger og finne ut hvorfor noe ikke fungerte. Jeg har også brukt det i arbeidet med linux og terminalkommandoer, siden det var flere ting jeg ikke hadde erfaring med fra før.
+Jeg har likevel prøvd å bruke det som et hjelpemiddel for å lære, ikke bare som en måte å få ferdig kode på. Jeg har brukt mye tid på å forstå hva koden faktisk gjør, og skrevet egne kommentarer på steder hvor jeg har lært noe nytt eller trengt å huske hvordan noe fungerer. Det er noen steder min kunnskap er litt mindre en andre steder, men regner med at mye av dette er noe vi skal lære med Monica, så blir utvidet da. 
+Jeg mener også at det er viktig å kontrollere forslagene man får, siden ikke alt som foreslås nødvendigvis passer til prosjektet eller fungerer slik man ønsker. 
+
+kommentarer og egen læring
+Jeg har brukt kommentarer aktivt gjennom utviklingen. De er ikke bare ment som forklaringer på hva koden gjør, også som en måte å huske ting jeg var usikker på eller nettopp hadde lært.
+Delene med flest kommentarer er sannsynligvis deler jeg jobbet med tidligere i prosjektuken. Etter hvert som jeg ble mer kjent med teknologiene, trengte jeg ikke lenger å skrive ned like mye for å forstå min egen kode. Derfor har flere av de nyere delene færre kommentarer. MEN, noen få steder der det ikke er så mye kommentater er også fordi selv om jeg ikke helt forsto, var det så sent i prosjektet og så nære deadline jeg valgte og lære meg det senere, når jeg ikke var hjernedød etter prosjektet. 
+Jeg synes dette viser ganske godt hvordan forståelsen min har utviklet seg gjennom prosjektet.
+hva jeg ville gjort annerledes
+Hvis jeg skulle startet på nytt, ville jeg brukt mer tid på planlegging og testing fra starten av. Jeg ville også vært flinkere til å dokumentere arbeidet underveis og lage mindre og mer forklarende commits.
+Jeg ville også avklart kravene enda bedre før jeg startet på enkelte funksjoner. Jeg brukte blant annet tid på funksjonalitet som senere viste seg å ikke være nødvendig. Samtidig lærte jeg noe av arbeidet, så det var ikke helt bortkastet.  Jeg vet også at det er MYE romm for optimering. F eks at jeg har 3-4 dato funksjoner i flere ruter, istedenfor en selvstendig en på toppen de kan kalle til. 
+
+avslutning
+Alt i alt er jeg veldig fornøyd med hvor langt jeg har kommet. Prosjektet har tatt utrolig mye tid, men jeg føler også at kunnskapen min har økt sååå mye. Jeg gikk fra å være usikker på mange grunnleggende deler av node.js, express og mongoose til å kunne forstå det meste jeg har brukt,  for noe som hadde virket ekstremt forvirrende en uke siden. 
+Jeg har ikke fått ferdigstilt absolutt alt jeg hadde planlagt, spesielt når det gjelder drift og videre testing, men jeg synes utviklingen jeg har hatt er noe av det jeg er mest fornøyd med.
+Det viktigste jeg tar med meg videre er hvor mye lettere det blir å utvikle noe når man faktisk forstår hvordan det fungerer, og ikke bare får det til å virke som det har vært litt i det siste når vi lærte node. 
+
