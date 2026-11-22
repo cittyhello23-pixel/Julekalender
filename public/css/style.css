@@ -33,21 +33,26 @@ h1 {
   font: 3.5rem var(--h1);
   margin: 1vw;
 }
+
 h2 {
   font: 2rem var(--h2);
   margin: 1vw;
 }
+
 h3 {
   font: 1.3rem var(--h3);
   margin: 1vw;
 }
+
 label {
   margin: 1vw;
 }
+
 p {
   font: 1rem var(--p);
   margin: 1vw;
 }
+
 a {
   text-decoration: none;
 }
@@ -95,11 +100,13 @@ nav a {
   color: var(--snow);
   font: 1.3rem var(--h2);
 }
+
 .navHei {
   font-family: var(--p);
   margin: 0 0 0 30px;
   font-weight: 300;
 }
+
 .navUser form {
   display: flex;
   align-items: center;
@@ -110,6 +117,7 @@ nav a {
 .navLogout {
   background: var(--pink);
 }
+
 .header {
   text-align: center;
 }
@@ -128,12 +136,15 @@ nav a {
 #indexH1 {
   font-size: 6rem;
 }
+
 #indexH2 {
   font-size: 2rem;
 }
+
 #indexP {
   font-size: 1.3rem;
 }
+
 .vinnerKandidate {
   padding: 15px;
   margin: 20px 0;
@@ -143,6 +154,7 @@ nav a {
 .answerContent p {
   overflow-wrap: anywhere;
 }
+
 #vinnerResultat {
   font-size: 1.3rem;
   text-align: center;
@@ -155,11 +167,13 @@ nav a {
   display: flex;
   justify-content: space-evenly;
 }
+
 #bekreftVinnerKnapp {
   min-width: 40%;
   padding: 20px;
   margin: 20px 0;
 }
+
 #trekkVinnerKnapp {
   min-width: 25%;
   max-height: 3.5rem;
@@ -167,13 +181,23 @@ nav a {
   margin: 20px 0;
 }
 
+/* Winner name inside calendar doors */
 .lukeVinner {
+  position: absolute;
+  bottom: 9px;
+  left: 5px;
+  right: 5px;
   display: block;
-  margin-top: 5px;
-  font-size: 0.75rem;
+  width: auto;
+  margin: 0;
+  font-size: 0.7rem;
+  line-height: 1.2;
   text-align: center;
   color: var(--night);
+  overflow-wrap: anywhere;
 }
+
+/* Calendar headings */
 .button .calendarEyebrow,
 .sectionLabel {
   color: var(--pink);
@@ -195,6 +219,7 @@ nav a {
   border-bottom: 1px solid var(--blue);
 }
 
+/* Calendar grid */
 .kalender,
 .editorGrid {
   display: grid;
@@ -202,16 +227,22 @@ nav a {
   gap: 14px;
 }
 
+.kalender {
+  grid-auto-rows: 125px;
+}
+
+/* Calendar doors */
 .luke,
 .editorDoor {
   display: flex;
+  position: relative;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: 7px;
   min-width: 90px;
   max-width: 200px;
-  min-height: 90px;
+  min-height: 0;
   max-height: 200px;
   padding: 12px;
   border: 1px solid rgba(255, 255, 255, 0.4);
@@ -220,6 +251,18 @@ nav a {
   transition:
     transform 0.2s,
     box-shadow 0.2s;
+}
+
+.luke {
+  height: 100%;
+}
+
+/* Reserve space for the winner without changing door height */
+.luke:has(.lukeVinner) {
+  justify-content: center;
+  padding-top: 7px;
+  padding-bottom: 29px;
+  gap: 4px;
 }
 
 .luke:hover,
@@ -232,39 +275,47 @@ nav a {
 .editorDoor strong {
   font-size: 2rem;
 }
+
 .lukeDekor {
   color: #80551a;
 }
+
 .lukeTekst,
 .editorDoor span {
   font-size: 0.8rem;
   letter-spacing: 1px;
 }
 
+/* Past doors */
 .fortid {
   color: var(--night);
   background: linear-gradient(var(--snow), var(--pink));
 }
+
 .fortid:hover {
   box-shadow: 0 8px 20px rgba(255, 192, 192, 0.5);
 }
-.idag:hover {
-  box-shadow: 0 8px 20px rgba(255, 246, 192, 0.5);
-}
-.framtid:hover {
-  transform: none;
-  box-shadow: none;
-  cursor: default;
-}
 
+/* Today's door */
 .idag {
   color: var(--night);
   background: linear-gradient(145deg, var(--gold), #fff2c9);
 }
 
+.idag:hover {
+  box-shadow: 0 8px 20px rgba(255, 246, 192, 0.5);
+}
+
+/* Future doors */
 .framtid {
   color: white;
   background: linear-gradient(145deg, var(--blue), var(--night));
+}
+
+.framtid:hover {
+  transform: none;
+  box-shadow: none;
+  cursor: default;
 }
 
 .calendarLegend {
@@ -285,13 +336,16 @@ nav a {
 .legendPast {
   background: var(--pink);
 }
+
 .legendToday {
   background: var(--gold);
 }
+
 .legendFuture {
   background: var(--blue);
 }
 
+/* Sections and cards */
 .section,
 .dashboardLink,
 .answerCard {
@@ -319,6 +373,7 @@ nav a {
   font-size: 1.1rem;
 }
 
+/* Images and videos */
 .media img,
 .media video {
   display: block;
@@ -330,6 +385,7 @@ nav a {
   object-fit: contain;
 }
 
+/* Reports */
 #reportTop {
   display: flex;
   flex-direction: row;
@@ -342,21 +398,27 @@ nav a {
   font: 3rem var(--h2);
   text-align: center;
 }
+
 #filterWrap {
   display: flex;
   gap: 2vw;
 }
+
 #reportTop h2 {
   margin: 0;
 }
+
 .filterField {
   margin: 20px 0;
 }
+
+/* Forms */
 form {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
+
 label {
   font-family: var(--h3);
 }
@@ -390,6 +452,7 @@ textarea {
   width: auto;
 }
 
+/* Buttons */
 button,
 .popupButton,
 .cancelButton {
@@ -419,6 +482,7 @@ select:focus-visible {
   outline-offset: 3px;
 }
 
+/* Login popup */
 .loginPopup {
   position: fixed;
   inset: 0;
@@ -457,33 +521,41 @@ select:focus-visible {
   margin: 10px;
 }
 
+/* Editor and dashboard */
 .editorDoor {
   color: white;
   background: linear-gradient(145deg, var(--blue), var(--night));
 }
+
 .dashboardQuickLinks {
   width: min(90%, 850px);
   margin: auto;
 }
+
 .dashboardLink {
   display: block;
   color: var(--snow);
 }
+
 .backLink {
   display: block;
   margin-bottom: 20px;
   color: var(--pink);
 }
+
 .editorForm {
   display: flex;
   flex-direction: column;
   gap: 50px;
 }
+
 .editorActions {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
 }
+
+/* Answer grading */
 .filterForm,
 .gradingActions {
   display: flex;
@@ -491,43 +563,54 @@ select:focus-visible {
   align-items: start;
   gap: 12px;
 }
+
 .filterForm h2 {
   margin: 20px 0;
 }
+
 .filterField {
   flex: 1;
   min-width: 150px;
 }
+
 .answerCard {
   margin: 18px 0;
 }
+
 .answerContent {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
   margin: 20px 0;
 }
+
 .answerContent p {
   margin: 15px 0;
 }
+
 .answerDiv {
   border-right: 1px solid var(--blue);
 }
+
 .answerStatus {
   padding: 6px 12px;
   border-radius: 20px;
   font-size: 0.8rem;
   color: var(--night);
 }
+
 .statusCorrect {
   background: var(--mint);
 }
+
 .statusWrong {
   background: var(--pink);
 }
+
 .statusPending {
   background: var(--gold);
 }
+
 .answerMeta {
   display: flex;
   flex-wrap: wrap;
@@ -536,9 +619,11 @@ select:focus-visible {
   font-size: 0.8rem;
   padding: 10px;
 }
+
 .answerlabel {
   font-size: 1.2rem;
 }
+
 .answerLuke {
   font-size: 2rem;
 }
@@ -546,10 +631,46 @@ select:focus-visible {
 .markCorrect {
   background: var(--mint);
 }
+
 .markWrong {
   background: var(--pink);
 }
 
+/* Error pages */
+.errorMessage {
+  color: #d93636;
+  background: #ffe5e5;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+.errorPage {
+  text-align: center;
+  margin: 40px auto;
+  max-width: 850px;
+}
+
+.errorPage h1 {
+  font-size: 5rem;
+  color: var(--pink);
+}
+
+.errorPage h2 {
+  color: var(--gold);
+}
+
+.errorPage a {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 12px 24px;
+  background: var(--gold);
+  color: var(--night);
+  border-radius: 12px;
+  text-decoration: none;
+}
+
+/* Mobile */
 @media (max-width: 750px) {
   body {
     margin: 15px;
@@ -560,60 +681,104 @@ select:focus-visible {
     justify-content: center;
     gap: 12px;
   }
+
   .helpPage .calendarHeading {
     flex-direction: row;
     text-align: left;
   }
+
   .helpPage h1 {
     font-size: 2.5rem;
   }
+
   #reportTop {
     flex-direction: column;
   }
+
   .answerDiv {
     border-right: none;
   }
+
   .helpPage .section p {
     margin-bottom: 20px;
   }
+
   nav ul {
     flex-wrap: wrap;
     justify-content: center;
   }
+
   nav a {
     font-size: 1.5rem;
   }
+
   .navHei {
     display: none;
   }
+
   #lukeSvarA {
     display: none;
   }
+
   .kalender,
   .editorGrid {
     grid-template-columns: repeat(3, 1fr);
   }
-  .luke,
-  .editorDoor {
-    min-height: 95px;
+
+  .kalender {
+    grid-auto-rows: 125px;
   }
+
+  .luke {
+    height: 100%;
+    min-width: 0;
+    padding: 10px 5px;
+  }
+
+  .luke:has(.lukeVinner) {
+    padding-top: 5px;
+    padding-bottom: 27px;
+    gap: 3px;
+  }
+
+  .lukeNummer {
+    font-size: 1.8rem;
+  }
+
+  .lukeTekst {
+    font-size: 0.7rem;
+  }
+
+  .lukeVinner {
+    bottom: 7px;
+    left: 3px;
+    right: 3px;
+    font-size: 0.62rem;
+    line-height: 1.2;
+  }
+
   .section {
     width: 100%;
     padding: 20px;
   }
+
   #indexH1 {
     font-size: 3.5rem;
   }
+
   .calendarHeading,
   .dashboardHeading,
   .reportHeading {
     flex-direction: column;
     text-align: center;
   }
+
   .answerContent {
     grid-template-columns: 1fr;
   }
 }
+
+/* Answer list */
 .answerList {
   display: flex;
   justify-content: center;
@@ -625,10 +790,13 @@ select:focus-visible {
   display: flex;
   justify-content: center;
 }
+
 #reportHeading {
   display: flex;
   justify-content: center;
 }
+
+/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

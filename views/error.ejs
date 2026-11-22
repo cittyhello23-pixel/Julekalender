@@ -1,0 +1,18 @@
+<html lang="no">
+<%- include("./partials/head") %>
+
+<body>
+  <%- include("./partials/nav") %>
+
+  <main class="errorPage">
+    <section class="section">
+      <h1><%= errorCode %></h1>
+      <h2><%= title %></h2>
+      <p><%= message %></p>
+
+      <a href="<%= backUrl || "/" %>">Til forsiden</a>
+    </section>
+  </main>
+</body>
+
+</html>

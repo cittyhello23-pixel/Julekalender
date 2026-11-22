@@ -12,6 +12,16 @@ const app = express();
 
 require("dotenv").config();
 
+// viser en feilmelding med riktig statuskode
+const showError = (res, status, title, message, backUrl = "/") => {
+  res.status(status).render("error", {
+    errorCode: status,
+    title: title,
+    message: message,
+    backUrl: backUrl,
+  });
+};
+
 app.set("view engine", "ejs"); // sier til express hvilken template engine den skal bruke
 app.use(express.urlencoded({ extended: true })); // lar express lese info fra en html form
 app.use(express.static("public")); // gjør at express leter i public automatisk
@@ -95,7 +105,19 @@ const optionalLogin = async (req, res, next) => {
 // denne brukes etter requireLogin, så vi vet at brukeren er logget inn
 const requireAdmin = (req, res, next) => {
   if (!req.user || req.user.role !== "admin") {
-    return res.status(403).send("Du har ikke tilgang til denne siden.");
+    // vinner-trekk bruker JSON fordi det håndteres av javascript
+    if (req.path === "/admin/vinner/trekk") {
+      return res.status(403).json({
+        error: "Du har ikke tilgang til denne funksjonen.",
+      });
+    }
+
+    return showError(
+      res,
+      403,
+      "Ingen tilgang",
+      "Du har ikke tillatelse til å åpne denne siden.",
+    );
   }
 
   next();
@@ -119,7 +141,12 @@ app.use((req, res, next) => {
 
 // viser login-siden
 app.get("/login", (req, res) => {
-  res.render("login");
+  res.render("login", {
+    errorMessage: null,
+    firstName: "",
+    lastName: "",
+    email: "",
+  });
 });
 
 app.get("/hjelp", (req, res) => {
@@ -137,9 +164,44 @@ app.post("/login", async (req, res) => {
     // setter sammen fornavn og etternavn til ett navn
     const navn = `${firstName} ${lastName}`;
 
-    // gir error hvis man ikke fyller ut alt eller bruker feil epost
-    if (!firstName || !lastName || !email.endsWith("@afk.no")) {
-      return res.status(400).send("Du må bruke en afk E-post.");
+    // sjekker om fornavn mangler
+    if (!firstName) {
+      return res.status(400).render("login", {
+        errorMessage: "Du må skrive inn fornavnet ditt.",
+        firstName,
+        lastName,
+        email,
+      });
+    }
+
+    // sjekker om etternavn mangler
+    if (!lastName) {
+      return res.status(400).render("login", {
+        errorMessage: "Du må skrive inn etternavnet ditt.",
+        firstName,
+        lastName,
+        email,
+      });
+    }
+
+    // sjekker om e-post mangler
+    if (!email) {
+      return res.status(400).render("login", {
+        errorMessage: "Du må skrive inn e-postadressen din.",
+        firstName,
+        lastName,
+        email,
+      });
+    }
+
+    // sjekker om e-posten er en afk epost
+    if (!email.endsWith("@afk.no")) {
+      return res.status(400).render("login", {
+        errorMessage: "Du må bruke en AFK-e-postadresse.",
+        firstName,
+        lastName,
+        email,
+      });
     }
 
     // finner en bruker med samme email, eller lager en ny hvis den ikke finnes
@@ -188,7 +250,12 @@ app.post("/login", async (req, res) => {
     res.redirect("/");
   } catch (error) {
     console.log(error);
-    res.status(500).send("Kunne ikke logge inn.");
+    return showError(
+      res,
+      500,
+      "Kunne ikke logge inn",
+      "Noe gikk galt da vi prøvde å logge deg inn. Prøv igjen senere.",
+    );
   }
 });
 
@@ -271,7 +338,12 @@ app.get("/lukeDashboard", requireLogin, requireAdmin, async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    res.status(500).send("Kunne ikke hente dashboardet.");
+    return showError(
+      res,
+      500,
+      "Kunne ikke hente dashboardet",
+      "Noe gikk galt da dashboardet skulle lastes.",
+    );
   }
 });
 
@@ -340,7 +412,12 @@ app.post(
         lukeNr > 24 ||
         !mongoose.Types.ObjectId.isValid(userId)
       ) {
-        return res.status(400).send("Ugyldig luke eller bruker.");
+        return showError(
+          res,
+          400,
+          "Ugyldig informasjon",
+          "Luken eller brukeren er ugyldig.",
+        );
       }
 
       // kontrollerer at brukeren faktisk har svart riktig på denne luken
@@ -352,14 +429,24 @@ app.post(
       });
 
       if (!kvalifisertSvar) {
-        return res.status(400).send("Brukeren er ikke kvalifisert.");
+        return showError(
+          res,
+          400,
+          "Ikke kvalifisert",
+          "Brukeren har ikke et riktig svar på denne luken.",
+        );
       }
 
       // sjekker at brukeren fortsatt finnes
       const bruker = await User.findById(userId);
 
       if (!bruker) {
-        return res.status(404).send("Fant ikke brukeren.");
+        return showError(
+          res,
+          404,
+          "Brukeren finnes ikke",
+          "Fant ikke brukeren i databasen.",
+        );
       }
 
       // oppdaterer vinneren hvis luken allerede har en,
@@ -384,7 +471,12 @@ app.post(
       res.redirect(`/lukeDashboard?lukeNr=${lukeNr}&vinnerLagret=true`);
     } catch (error) {
       console.log(error);
-      res.status(500).send("Kunne ikke lagre vinneren.");
+      return showError(
+        res,
+        500,
+        "Kunne ikke lagre vinneren",
+        "Noe gikk galt da vinneren skulle lagres.",
+      );
     }
   },
 );
@@ -464,7 +556,12 @@ app.get("/lukeSvar", requireLogin, requireAdmin, async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    res.status(500).send("Kunne ikke hente svar.");
+    return showError(
+      res,
+      500,
+      "Kunne ikke hente svar",
+      "Noe gikk galt da svarene skulle hentes.",
+    );
   }
 });
 //
@@ -484,7 +581,12 @@ app.post(
 
       // sjekker at vurderingen faktisk er enten true eller false sånn man ikke kan f eks sette null som vurdering. det er bare for de som IKKE er vurderte
       if (vurdering !== "true" && vurdering !== "false") {
-        return res.status(400).send("Ugyldig vurdering.");
+        return showError(
+          res,
+          400,
+          "Ugyldig vurdering",
+          "Velg om svaret er riktig eller feil.",
+        );
       }
 
       // finner svaret med denne id'en og oppdaterer vurderingen til at den er vurdert
@@ -510,7 +612,12 @@ app.post(
       res.redirect(`/lukeSvar?${query}`);
     } catch (error) {
       console.log(error);
-      res.status(500).send("Kunne ikke vurdere svaret.");
+      return showError(
+        res,
+        500,
+        "Kunne ikke vurdere svaret",
+        "Noe gikk galt da svaret skulle vurderes.",
+      );
     }
   },
 );
@@ -523,40 +630,48 @@ app.post(
 // hovedside
 
 // viser julekalenderen og finner dagens dato
-
-// viser julekalenderen og finner dagens dato
 app.get("/", async (req, res) => {
-  // henter dagens dato
-  const dato = new Date();
+  try {
+    // henter dagens dato
+    const dato = new Date();
 
-  // finner hvilken dag det er i Norge
-  const dag = Number(
-    new Intl.DateTimeFormat("en-US", {
-      timeZone: "Europe/Oslo",
-      day: "numeric",
-    }).format(dato),
-  );
+    // finner hvilken dag det er i Norge
+    const dag = Number(
+      new Intl.DateTimeFormat("en-US", {
+        timeZone: "Europe/Oslo",
+        day: "numeric",
+      }).format(dato),
+    );
 
-  // dagens dato bestemmer hvilke luker som er åpne
-  const dagensDato = dag;
+    // dagens dato bestemmer hvilke luker som er åpne
+    const dagensDato = dag;
 
-  // henter alle lagrede vinnere og navnene deres
-  const vinnere = await Vinner.find().populate("userId", "navn");
+    // henter alle lagrede vinnere og navnene deres
+    const vinnere = await Vinner.find().populate("userId", "navn");
 
-  // lager et objekt der lukeNr brukes som nøkkel og vinnerens navn som verdi
-  const vinnerNavn = {};
+    // lager et objekt der lukeNr brukes som nøkkel og vinnerens navn som verdi
+    const vinnerNavn = {};
 
-  vinnere.forEach((vinner) => {
-    if (vinner.userId) {
-      vinnerNavn[vinner.lukeNr] = vinner.userId.navn;
-    }
-  });
+    vinnere.forEach((vinner) => {
+      if (vinner.userId) {
+        vinnerNavn[vinner.lukeNr] = vinner.userId.navn;
+      }
+    });
 
-  // sender datoen og vinnernavnene til index.ejs
-  res.render("index", {
-    dagensDato: dagensDato,
-    vinnerNavn: vinnerNavn,
-  });
+    // sender datoen og vinnernavnene til index.ejs
+    res.render("index", {
+      dagensDato: dagensDato,
+      vinnerNavn: vinnerNavn,
+    });
+  } catch (error) {
+    console.log(error);
+    return showError(
+      res,
+      500,
+      "Kunne ikke hente kalenderen",
+      "Noe gikk galt da julekalenderen skulle lastes.",
+    );
+  }
 });
 
 // redigere luker
@@ -569,7 +684,12 @@ app.get("/admin/luke/:lukeNr", requireLogin, requireAdmin, async (req, res) => {
 
     // sjekker at lukeNr er et gyldig heltall mellom 1 og 24
     if (!Number.isInteger(lukeNr) || lukeNr < 1 || lukeNr > 24) {
-      return res.status(400).send("Ugyldig luke");
+      return showError(
+        res,
+        400,
+        "Ugyldig luke",
+        "Lukenummeret må være mellom 1 og 24.",
+      );
     }
 
     // leter etter informasjon om denne luken i luke-kolleksjonen
@@ -608,7 +728,12 @@ app.get("/admin/luke/:lukeNr", requireLogin, requireAdmin, async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    res.status(500).send("Noe gikk galt");
+    return showError(
+      res,
+      500,
+      "Kunne ikke hente luken",
+      "Noe gikk galt da luken skulle åpnes.",
+    );
   }
 });
 
@@ -624,7 +749,12 @@ app.post(
 
       // sjekker at luke nummeret er gyldig
       if (!Number.isInteger(lukeNr) || lukeNr < 1 || lukeNr > 24) {
-        return res.status(400).send("Ugyldig luke");
+        return showError(
+          res,
+          400,
+          "Ugyldig luke",
+          "Lukenummeret må være mellom 1 og 24.",
+        );
       }
 
       // henter informasjonen som allerede finnes om denne luken
@@ -702,7 +832,12 @@ app.post(
       res.redirect(`/admin/luke/${lukeNr}`);
     } catch (error) {
       console.log(error);
-      res.status(500).send("Kunne ikke lagre luken.");
+      return showError(
+        res,
+        500,
+        "Kunne ikke lagre luken",
+        "Noe gikk galt da luken skulle lagres.",
+      );
     }
   },
 );
@@ -735,7 +870,12 @@ app.get("/brukere", requireLogin, requireAdmin, async (req, res) => {
     res.render("brukere", { brukere: brukerOversikt });
   } catch (error) {
     console.error("Feil ved henting av brukere:", error);
-    res.status(500).send("Kunne ikke hente brukerne");
+    return showError(
+      res,
+      500,
+      "Kunne ikke hente brukerne",
+      "Noe gikk galt da brukeroversikten skulle hentes.",
+    );
   }
 });
 
@@ -748,8 +888,14 @@ app.get("/luke/:lukeNr", async (req, res) => {
 
     // sjekker at lukeNr er et gyldig heltall mellom 1 og 24
     if (!Number.isInteger(lukeNr) || lukeNr < 1 || lukeNr > 24) {
-      return res.status(400).send("Ugyldig luke");
+      return showError(
+        res,
+        400,
+        "Ugyldig luke",
+        "Lukenummeret må være mellom 1 og 24.",
+      );
     }
+
     // sjekker om luken har kommet ennå
     const dagensDato = Number(
       new Intl.DateTimeFormat("en-US", {
@@ -759,8 +905,14 @@ app.get("/luke/:lukeNr", async (req, res) => {
     );
 
     if (lukeNr > dagensDato) {
-      return res.status(403).send("Denne luken er ikke åpnet ennå.");
+      return showError(
+        res,
+        403,
+        "Denne luken er ikke åpnet",
+        "Du må vente til riktig dato før du kan åpne denne luken.",
+      );
     }
+
     // henter informasjonen fra luke-kolleksjonen
     const funnetLuke = await Luke.findOne({ lukeNr: lukeNr });
 
@@ -806,7 +958,12 @@ app.get("/luke/:lukeNr", async (req, res) => {
 
     // hvis luken er deaktivert, skal den ikke vises
     if (!luke.aktiv) {
-      return res.send("Denne luken er ikke tilgjengelig");
+      return showError(
+        res,
+        404,
+        "Luken er ikke tilgjengelig",
+        "Denne luken er ikke tilgjengelig akkurat nå.",
+      );
     }
 
     // sender informasjonen til luke.ejs
@@ -827,7 +984,12 @@ app.get("/luke/:lukeNr", async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    res.status(500).send("Noe gikk galt");
+    return showError(
+      res,
+      500,
+      "Noe gikk galt",
+      "Kunne ikke åpne luken. Prøv igjen senere.",
+    );
   }
 });
 
@@ -838,7 +1000,29 @@ app.post("/luke/:lukeNr/svar", requireLogin, async (req, res) => {
 
     // sjekker at lukeNr er et gyldig heltall mellom 1 og 24
     if (!Number.isInteger(lukeNr) || lukeNr < 1 || lukeNr > 24) {
-      return res.status(400).send("Ugyldig luke");
+      return showError(
+        res,
+        400,
+        "Ugyldig luke",
+        "Lukenummeret må være mellom 1 og 24.",
+      );
+    }
+
+    // sjekker om luken har kommet ennå
+    const dagensDato = Number(
+      new Intl.DateTimeFormat("en-US", {
+        timeZone: "Europe/Oslo",
+        day: "numeric",
+      }).format(new Date()),
+    );
+
+    if (lukeNr > dagensDato) {
+      return showError(
+        res,
+        403,
+        "Denne luken er ikke åpnet",
+        "Du må vente til riktig dato før du kan sende inn svar.",
+      );
     }
 
     // henter svaret fra skjemaet
@@ -846,7 +1030,12 @@ app.post("/luke/:lukeNr/svar", requireLogin, async (req, res) => {
 
     // sjekker at eleven faktisk har skrevet eller valgt et svar
     if (typeof svar !== "string" || !svar.trim()) {
-      return res.status(400).send("Du må skrive inn et svar");
+      return showError(
+        res,
+        400,
+        "Du mangler et svar",
+        "Du må skrive inn eller velge et svar før du sender inn.",
+      );
     }
 
     // henter luken fra mongodb
@@ -878,10 +1067,15 @@ app.post("/luke/:lukeNr/svar", requireLogin, async (req, res) => {
 
     // sjekker om luken er deaktivert
     if (luke && !luke.aktiv) {
-      return res.status(404).send("Denne luken finnes ikke");
+      return showError(
+        res,
+        404,
+        "Luken er ikke tilgjengelig",
+        "Denne luken er ikke tilgjengelig akkurat nå.",
+      );
     }
 
-    // sjekker mongodb for å se om denne brukeren allerede har svart på denne luken
+    // mongodb for å se om denne brukeren allerede har svart på denne luken
     const eksisterendeSvar = await Svar.findOne({
       lukeNr: lukeNr,
       userId: req.user._id,
@@ -904,8 +1098,23 @@ app.post("/luke/:lukeNr/svar", requireLogin, async (req, res) => {
     res.redirect(`/luke/${lukeNr}?submitted=true`);
   } catch (error) {
     console.log(error);
-    res.status(500).send("Kunne ikke lagre svaret.");
+    return showError(
+      res,
+      500,
+      "Kunne ikke lagre svaret",
+      "Noe gikk galt da svaret skulle lagres.",
+    );
   }
+});
+
+// viser feilmelding hvis noen prøver å åpne en side som ikke finnes
+app.use((req, res) => {
+  showError(
+    res,
+    404,
+    "Siden finnes ikke",
+    "Lenken kan være feil, eller siden har blitt flyttet.",
+  );
 });
 
 // starter serveren

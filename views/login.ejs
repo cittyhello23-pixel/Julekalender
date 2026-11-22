@@ -1,33 +1,44 @@
 <html lang="no">
-<%- include ("./partials/head.ejs") %>
+<%- include("./partials/head.ejs") %>
 
 <body>
-  <%- include ("./partials/nav.ejs") %>
+  <%- include("./partials/nav.ejs") %>
+
   <div class="header">
     <h1>Logg inn!</h1>
     <h2>
-      Skriv in ditt fornavn, etternavn, og skole E-post som vi kan kontakte
-      deg hvis du har vunnet en trekkning.
+      Skriv inn ditt fornavn, etternavn, og skole-E-post som vi kan kontakte
+      deg på hvis du har vunnet en trekning.
     </h2>
   </div>
+
   <section class="section login">
+    <% if (errorMessage) { %>
+    <p class="errorMessage"><%= errorMessage %></p>
+    <% } %>
+
     <form action="/login" method="post">
       <label for="firstName">Fornavn</label>
-      <input type="text" name="firstName" id="firstName" />
+      <input type="text" name="firstName" id="firstName" value="<%= firstName %>" required />
+
       <label for="lastName">Etternavn</label>
-      <input type="text" name="lastName" id="lastName" />
+      <input type="text" name="lastName" id="lastName" value="<%= lastName %>" required />
+
       <label for="email">afk.no E-post</label>
-      <input type="email" name="email" id="email" />
-      <button type="submit">submit</button>
+      <input type="email" name="email" id="email" value="<%= email %>" required />
+
+      <button type="submit">Logg inn</button>
     </form>
+
     <p>
       Informasjonen du oppgir, brukes kun til å administrere brukerkontoen
       din. Opplysningene dine blir ikke solgt eller delt med uvedkommende, og
-      behandles i samsvar med gjeldende personvernregler. Ufine eller uhøfflige navn eller eposter vil ikke telles i trekkning.
+      behandles i samsvar med gjeldende personvernregler. Ufine eller
+      uhøflige navn eller e-poster vil ikke telles i trekningen.
     </p>
   </section>
 
-  <%- include ("./partials/footer.ejs") %>
+  <%- include("./partials/footer.ejs") %>
 </body>
 
 </html>
