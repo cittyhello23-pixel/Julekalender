@@ -8,6 +8,8 @@ Kalenderen består av 24 luker, hvor hver luke kan inneholde et spørsmål, teks
 
 Prosjektet er utviklet individuelt med node, express, ejs og MongoDB. Jeg har også brukt git og github gjennom utviklingen for å holde orden på endringer, branches og forskjellige deler av prosjektet som vi har lært. Men jeg var litt glemsk noen ganger på og commite og lage branches, men above all, det fungerte og jeg skjønner det.
 
+Jeg har bare lagd en readme.md, her er all dokumentasjon og brukerveiledning. Laget også en refleksjons notat for andre tanker, og litt mer personlige meninger på prossesen, hva jeg lærte, etc. Det er 2 bilder i prosjektet, en for mongo modler modellen jeg lagde, og en for noen vm specs.
+
 ---
 
 ## Funksjonalitet
